@@ -45,6 +45,7 @@ app.config["JSON_AS_ASCII"] = False
 
 @app.route('/')
 def main_view():
+	update_info()
 	return render_template('index.html', local_url=local_url ,series_shelf_id="")
 
 @app.route('/series_shelf')
@@ -146,8 +147,6 @@ def favicon():
 
 
 if __name__ == "__main__":
-	update_info()
-
 	if(local_ip=="127.0.0.1"):
 		app.run(port=settings["port"])	
 	else:
