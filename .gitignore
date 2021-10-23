@@ -1,0 +1,11 @@
+__pycache__/
+.ipynb_checkpoints/
+.vscode/
+
+shelf_info/
+static/covers/
+
+batch_files/
+
+*.ipynb
+trial_dir/

@@ -1,0 +1,98 @@
+/* https://developer.mozilla.org/ja/docs/Web/CSS/CSS_Grid_Layout/Basic_Concepts_of_Grid_Layout */
+.grid_wrapper{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-column-gap: 15px;
+}
+
+/* シリーズ棚大枠 */
+.horizontal_scroll_wrap{
+  background: #f1f1f1;
+  height: 160px;
+  padding: 8px;
+  position: relative; /* parm_boxとhidden_series_linkを重ねて表示させるため */
+  overflow-x: hidden; 
+  font-size: 0; /* これがないと子要素のheightが100%でも微小な縦スクロールが発生する↓ */
+  /* https://stackoverflow.com/questions/20880306/horizontal-scroll-with-height-fixed-on-100 */
+}
+/* シリーズ棚内部 */
+ul.scroll_lst {
+  width: auto;
+  height:100%;
+  margin: 0px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+/* スクロールバーを消す(Chrome, Safari) */
+ul.scroll_lst::-webkit-scrollbar{
+  display:none;
+}
+/* 表紙画像 */
+li.scroll_item {
+  display: inline-block;
+  width: auto;
+  height: 100%;
+  margin-right: 2px;
+}
+a.cover img{
+  display: block;
+  width: auto;
+  height: 100%;
+  margin: 0px;
+}
+
+
+.serial_wrapper{
+  display: block;
+  width:auto;
+}
+.serial_item{
+  display: inline-block;
+  width: 100px;
+  height: auto;
+  margin: 0px 2px 2px 0px;
+}
+a.cover_w img{
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0px;
+}
+
+/* 評価情報入力ボックス */
+.param_box{ 
+  position: absolute;  /* horizontal_scroll_wrapと重ねて表示させる */
+  top: 0px;
+  right: 0px;
+  width: auto;
+  height: auto;
+  font-size: medium;
+  border: 1px solid #ddd;
+  background: white;
+  display: none;
+}
+/* シリーズ本棚へのリンク */
+.hidden_series_link{
+  position: absolute;  /* horizontal_scroll_wrapと重ねて表示させる */
+  top: 0px;
+  right: 0px;
+  width: 50px;
+  height: 100%;
+}
+
+.status_bar {
+  position: fixed;
+  top: 0px;
+  width: 99%;
+  z-index: 1000; /* 最前面に来るよう */
+  background:rgba(255,255,255,0.75);
+}
+#hide_button{
+  width: 75%;
+  height: 30px;
+  cursor: pointer;
+}
+#hidden_buttons{
+  line-height:2;
+  padding: 5px;
+}

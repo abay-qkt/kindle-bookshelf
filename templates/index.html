@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja" class="gr__guide_withabout_net">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>KINDLE MANGA SHELF</title>
+		<link href="../static/bookshelf.css" rel="stylesheet" type="text/css">
+		<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+		<script src="https://cdn.it-the-best.com/jquery/plugin/listmousedrag/2.6.2/listmousedragscroll.min.js"></script>
+	</head>
+	<body>
+		<div class="status_bar">
+			<div id="hide_button"></div>
+			<span id="hidden_buttons">
+				{% if not series_shelf_id %}
+				<input type="checkbox" id="edit_mode_check" onchange="switch_show_rating()"><label for="edit_mode_check">:Rating Mode</label>
+				<button onclick="update_rating()">Apply Rating</button>
+				<input type="checkbox" id="show_all_mode" onchange="switch_show_all();" style="margin-left:20px" checked><label for="show_all_mode">:Show all</label>
+				<button onclick="switch_shelf();" id="switchshelf_btn" style="margin-left:10px">SWITCH</button>
+				<br>
+				<label for="colnum_dd">Columns:</label><select id="colnum_dd"></select>
+				<label for="imgsize_slider">Image Size:</label><input type="range" id="imgsize_slider" min="80" max="400" step="1" value="160" style="width:400px">
+				<br>
+				<label for="sort_dd">Sort:</label><select id="sort_dd"></select>
+				<select id="asc_dd"></select>
+				<label for="keyword_box" style="margin-left:10px">Keywords:</label><input type="text" id="keyword_box" size="30" value="">
+				<button onclick="send_query();" id="apply1">Apply</button>
+				<br>
+				<label for="query_box">Query:</label><input type="text" id="query_box" size="80" value="">
+				<button onclick="send_query();" id="apply2">Apply</button>
+				{% else %}
+				<label for="imgsize_slider">Image Size:</label><input type="range" id="imgsize_slider" min="80" max="400" step="1" value="300" style="width:500px">
+				{% endif %}
+			</span>
+		</div>
+		<div class="shelf_wrapeper">
+			<div class="grid_wrapper" id="bookshelf"></div>
+		</div>
+		<script type="text/javascript">
+			var local_url = {{local_url|tojson}};
+			var series_shelf_id = {{series_shelf_id|tojson}};
+		</script>
+		<script src="../static/bookshelf.js"></script>
+	</body>
+</html>
