@@ -39,19 +39,20 @@ def metadata_list2df(metadata_list):
     book_df["title_pron"] = book_df["title"].map(lambda x:x["@pronunciation"])
     book_df["title"] = book_df["title"].map(lambda x:x["#text"])
 
+    book_df["authors"] = book_df["authors"].map(lambda x_list:",".join([x["#text"] for x in x_list]))
+    book_df["publishers"] = book_df["publishers"].str.join(',')
+
+    book_df["origin_type"] = book_df["origins"].map(lambda x:x["origin"]['type'])
+    book_df.drop(["origins"],axis=1,inplace=True)
+
     # 無料という文字列が入った書籍は削除
     book_df = book_df[~book_df["title"].str.contains("無料")]
     
     # 購入日が欠損の本は最初から入っている辞書？等で不要なので削除
     book_df.dropna(subset=["purchase_date"],inplace=True)
 
-    book_df["publication_date"] = (pd.to_datetime(book_df["publication_date"])
-                                   .astype("<M8[ns]")  # 欠損値補間するにあたって都合が良いためdatetime64[ns]から変換
-                                   .fillna(pd.to_datetime("2200-01-01")) # int64型に変換するにあたって欠損は扱えないため
-                                   .astype('int64') // 10**6) # 秒単位のunixtimeにする
-    book_df["purchase_date"] = (pd.to_datetime(book_df["purchase_date"])
-                                .astype("<M8[ns]")  # datetime64[ns]のままでも問題ないが、publication_dateに合わせる
-                                .astype("int64")//10**6)  # 秒単位のunixtimeにする
+    book_df["publication_date"] = pd.to_datetime(book_df["publication_date"]).dt.tz_localize(None)
+    book_df["purchase_date"] = pd.to_datetime(book_df["purchase_date"]).dt.tz_convert('Asia/Tokyo').dt.tz_localize(None)
     
     book_df[["series_pron","series_num"]] =  book_df["title_pron"].apply(get_series_and_num)
     book_df["series_num"] = book_df["series_num"].fillna(-1).astype(int)
