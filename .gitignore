@@ -9,3 +9,5 @@ batch_files/
 
 *.ipynb
 trial_dir/
+
+*.xlsx

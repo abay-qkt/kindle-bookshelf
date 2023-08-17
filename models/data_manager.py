@@ -26,7 +26,7 @@ def modify_metadata_dict(metadata_dict):
 
 def get_series_and_num(x):
     # 数字の前にスペースがある場合とない場合がある。連番2桁の場合と3桁の場合がある
-    pattern = '([ァ-ヴ][ァ-ヴー・]+\s*)(\d{2,3})' 
+    pattern = '([ァ-ヴ][ァ-ヴー・]+\s*)(\d+)' 
     rm = re.match(pattern,x)
     if(rm):
         return pd.Series([rm.group(1),int(rm.group(2))])
