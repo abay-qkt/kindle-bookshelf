@@ -39,9 +39,9 @@ def metadata_list2df(metadata_list):
     book_df["title_pron"] = book_df["title"].map(lambda x:x["@pronunciation"])
     book_df["title"] = book_df["title"].map(lambda x:x["#text"])
 
-    book_df["authors_pron"] = book_df["authors"].map(lambda x_list:",".join([x["@pronunciation"] for x in x_list]))
-    book_df["authors"] = book_df["authors"].map(lambda x_list:",".join([x["#text"] for x in x_list]))
-    book_df["publishers"] = book_df["publishers"].str.join(',')
+    book_df["authors_pron"] = book_df["authors"].map(lambda x_list:"/".join([x["@pronunciation"] for x in x_list]))
+    book_df["authors"] = book_df["authors"].map(lambda x_list:"/".join([x["#text"] for x in x_list]))
+    book_df["publishers"] = book_df["publishers"].str.join('/')
 
     book_df["origin_type"] = book_df["origins"].map(lambda x:x["origin"]['type'])
     book_df.drop(["origins"],axis=1,inplace=True)
