@@ -31,7 +31,7 @@ def get_series_and_num(x):
     if(rm):
         return pd.Series([rm.group(1),int(rm.group(2))])
     else:
-        return pd.Series(["no_series_id",None])
+        return pd.Series([x,None])
 
 def metadata_list2df(metadata_list):
     book_df = pd.DataFrame.from_dict(metadata_list)
