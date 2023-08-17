@@ -58,14 +58,10 @@ def series_view():
 
 @app.route('/get_book_info',methods=["POST"])
 def get_book_info():
-	book_df = pd.read_json("shelf_info/book_info.json",orient="records")
-	series_df = pd.read_json("shelf_info/series_info.json",orient="records")
+	book_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='book')
+	series_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='series')
 
 	series_df = series_df.sort_values(["rating"],ascending=False)
-
-	# クエリで扱いやすいようdatetime型に
-	book_df["publication_date"] = pd.to_datetime(book_df["publication_date"]*10**6)
-	book_df["purchase_date"] = pd.to_datetime(book_df["purchase_date"]*10**6)
 	
 	book_df["purchase_timing"] = (book_df["purchase_date"]-book_df["publication_date"]).dt.total_seconds()
 
@@ -80,7 +76,7 @@ def get_book_info():
 			ret = {}
 			ret["purchases"] = x.shape[0]
 			ret["series_pron"] = x["series_pron"].iloc[0]
-			ret["author_pron"] = x["authors"].iloc[0][0]["@pronunciation"]
+			ret["author_pron"] = x["authors"].iloc[0]
 
 			ret["oldest_publication"] = x["publication_date"].min()
 			ret["latest_publication"] = x["publication_date"].max()
@@ -90,8 +86,8 @@ def get_book_info():
 			ret["late_purchase"]  = x["purchase_timing"].max()
 
 			keywords = [x["title"].iloc[0]]
-			keywords.extend(set(x["authors"].map(lambda x_list:[x["#text"] for x in x_list]).sum()))
-			keywords.extend(set(x["publishers"].sum()))
+			keywords.extend(set(x["authors"].fillna("")))
+			keywords.extend(set(x["publishers"].fillna("")))
 			ret["keywords"] = " ".join(keywords).upper()
 
 			return pd.Series(ret)
@@ -113,11 +109,11 @@ def get_book_info():
 		date_cols = ["oldest_publication","latest_publication",
 					 "oldest_purchase","latest_purchase",
 					 "early_purchase","late_purchase"]
-		series_df[date_cols] = series_df[date_cols].astype("int64")//10**6  # json化するために数値にする	
+		series_df[date_cols] = series_df[date_cols].astype("int64")//10**9  # json化するために数値にする	
 
 	# json化するために数値に戻す	
-	book_df["publication_date"] = book_df["publication_date"].astype("int64")//10**6
-	book_df["purchase_date"] = book_df["purchase_date"].astype("int64")//10**6
+	book_df["publication_date"] = book_df["publication_date"].astype("int64")//10**9
+	book_df["purchase_date"] = book_df["purchase_date"].astype("int64")//10**9
 
 	book_dict = book_df.sort_values("series_num").to_dict(orient="records")
 	series_dict =  series_df.to_dict(orient="records")
@@ -127,12 +123,14 @@ def get_book_info():
 
 @app.route('/edit_series_review', methods=["POST"])
 def edit_series_review():
-	series_dict = pd.read_json("shelf_info/series_info.json",orient="records").set_index("series_id")
+	series_dict = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='series').set_index("series_id")
 	added_dict = pd.DataFrame.from_dict(request.json["series_param"]).set_index("series_id")
-	series_dict.loc[added_dict.index,:] = added_dict.loc[:,series_dict.columns]
-	series_dict.reset_index(inplace=True)
-	with open('shelf_info/series_info.json', 'w', encoding='utf-8') as f:
-		series_dict.to_json(f,orient="records",force_ascii=False,indent=4)
+	series_dict.loc[added_dict.index,series_dict.columns] = added_dict.loc[:,series_dict.columns]
+	series_df = series_dict.reset_index()
+	book_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='book')
+	with pd.ExcelWriter(shelf_info_path/'shelf_info.xlsx') as writer:
+		book_df.to_excel(writer, index=False, sheet_name='book')  
+		series_df.to_excel(writer, index=False, sheet_name='series')  
 	return {}
 
 # @app.route('/update_info',methods=["POST"])
