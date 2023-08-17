@@ -11,3 +11,4 @@ batch_files/
 trial_dir/
 
 *.xlsx
+*.xlsx#
