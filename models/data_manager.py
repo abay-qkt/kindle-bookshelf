@@ -36,6 +36,9 @@ def get_series_and_num(x):
 def metadata_list2df(metadata_list):
     book_df = pd.DataFrame.from_dict(metadata_list)
 
+    book_df["origin_type"] = book_df["origins"].map(lambda x:x["origin"]['type'])
+    book_df.drop(["origins"],axis=1,inplace=True)
+
     book_df["title_pron"] = book_df["title"].map(lambda x:x["@pronunciation"])
     book_df["title"] = book_df["title"].map(lambda x:x["#text"])
 
@@ -43,22 +46,16 @@ def metadata_list2df(metadata_list):
     book_df["authors"] = book_df["authors"].map(lambda x_list:"/".join([x["#text"] for x in x_list]))
     book_df["publishers"] = book_df["publishers"].str.join('/')
 
-    book_df["origin_type"] = book_df["origins"].map(lambda x:x["origin"]['type'])
-    book_df.drop(["origins"],axis=1,inplace=True)
-
     # 無料という文字列が入った書籍は削除
     book_df = book_df[~book_df["title"].str.contains("無料")]
     
-    # 購入日が欠損の本は最初から入っている辞書？等で不要なので削除
-    # book_df.dropna(subset=["purchase_date"],inplace=True)
-
     # kindleに最初から入っている辞書でpronunciationが空になることを確認。英書籍だとそうなると仮定しtitleで埋める
     book_df.loc[book_df["title_pron"]=="","title_pron"]=book_df.loc[book_df["title_pron"]=="","title"]
     book_df.loc[book_df["authors_pron"]=="","authors_pron"]=book_df.loc[book_df["authors_pron"]=="","authors"]
 
+    # datetime型に変換。publication_dateはUTCでpurchase_dateはJST。
     book_df["publication_date"] = pd.to_datetime(book_df["publication_date"]).dt.tz_localize(None)
     book_df["purchase_date"] = pd.to_datetime(book_df["purchase_date"]).dt.tz_convert('Asia/Tokyo').dt.tz_localize(None)
-
     # int64型に変換する際に欠損は扱えないため
     book_df["publication_date"] = book_df["publication_date"] .fillna(pd.to_datetime("2200-01-01")) 
     book_df["purchase_date"] = book_df["purchase_date"] .fillna(pd.to_datetime("2200-01-01"))
