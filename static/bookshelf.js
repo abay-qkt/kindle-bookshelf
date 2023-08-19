@@ -40,7 +40,7 @@ function edit_book_size(size){
     "margin-right": size*0.03125+"px"
   });
   $('.serial_item').css({
-    "width": size*0.6+"px",
+    "width": size*0.8+"px",
   });
 }
 
@@ -358,6 +358,13 @@ function send_query(){
   call_api("get_book_info",arg_data={"data":data_dict})
 }
 
+function log_ajax_fail(jqXHR, textStatus, errorThrown){
+  console.log(textStatus,jqXHR,errorThrown);
+  console.log(jqXHR);
+  console.log(errorThrown);
+  alert(textStatus);
+}
+
 // オプションバーから設定値を取得しクエリを投げて保存する
 function save_shelf_config(){
   data_dict = {
@@ -377,12 +384,10 @@ function save_shelf_config(){
     contentType:'application/json'
   }).done(function(res,textStatus,jqXHR){
     console.log("saved");
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-    console.log(textStatus);
-    console.log(jqXHR);
-    console.log(errorThrown);
-    alert(textStatus);
-  });
+  }).fail(log_ajax_fail);
+  // 閉じる
+  const overlay = document.getElementById('overlay');
+  overlay.style.display = 'none';
 }
 
 function load_shelf_config(shelf_config_name){
@@ -418,11 +423,6 @@ function make_load_config_window(){
   const overlay = document.getElementById('overlay');
   const closeButton = document.getElementById('closeButton');
 
-  var ul_config = document.createElement('ul');
-  ul_config.setAttribute("id","config_ul");
-  var config_window = document.getElementById('config_window');
-  config_window.appendChild(ul_config);
-
   openButton.addEventListener('click', () => {
     overlay.style.display = 'flex';
     get_shelf_config_list();
@@ -454,12 +454,7 @@ function get_shelf_config_list(){
         ul_config.appendChild(li_config)
       }
     }
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-    console.log(textStatus,jqXHR,errorThrown);
-    console.log(jqXHR);
-    console.log(errorThrown);
-    alert(textStatus);
-  });
+  }).fail(log_ajax_fail);
 }
 
 function get_one_series(){
@@ -482,12 +477,7 @@ function call_api(api,arg_data={"data":null}){
       series_list = res["series"];
       draw_shelf();
       draw_rating();
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-      console.log(textStatus,jqXHR,errorThrown);
-      console.log(jqXHR);
-      console.log(errorThrown);
-      alert(textStatus);
-      });
+  }).fail(log_ajax_fail);
 }
 
 // 評価情報を編集し、再描画する
@@ -499,10 +489,5 @@ function edit_series_review(series_dl_js){
       contentType:'application/json'
     }).done(function(res,textStatus,jqXHR){
       send_query();
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-      console.log(textStatus);
-      console.log(jqXHR);
-      console.log(errorThrown);
-      alert(textStatus);
-      });
+  }).fail(log_ajax_fail);
 }

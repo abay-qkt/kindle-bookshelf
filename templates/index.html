@@ -16,6 +16,16 @@
 				<button onclick="update_rating()">Apply Rating</button>
 				<input type="checkbox" id="show_all_mode" onchange="switch_show_all();" style="margin-left:20px" checked><label for="show_all_mode">:Show all</label>
 				<button onclick="switch_shelf();" id="switchshelf_btn" style="margin-left:10px">SWITCH</button>
+				<button id="openButton" style="margin-left:10px">Shelf Config</button>
+				<div class="overlay" id="overlay">
+					<div id="config_window" class="popup">
+						<label for="config_box">Shelf name for saving:</label><input type="text" id="config_box" size="40" value="">
+						<button onclick="save_shelf_config();" id="save">Save</button>
+						<h3>Select Config</h3>
+						<ul id="config_ul"></ul>
+						<button id="closeButton">Close</button>
+					</div>
+				</div>
 				<br>
 				<label for="colnum_dd">Columns:</label><select id="colnum_dd"></select>
 				<label for="imgsize_slider">Image Size:</label><input type="range" id="imgsize_slider" min="80" max="400" step="1" value="160" style="width:400px">
@@ -27,21 +37,6 @@
 				<br>
 				<label for="query_box">Query:</label><input type="text" id="query_box" size="80" value="">
 				<button onclick="send_query();" id="apply2">Apply</button>
-				<br>
-				<button id="openButton">Open Selection</button>
-				<div class="overlay" id="overlay">
-					<div id="config_window" class="popup">
-						<label for="config_box">Shelf name for saving:</label><input type="text" id="config_box" size="40" value="">
-						<button onclick="save_shelf_config();" id="save">Save</button>
-						<!-- <h3>Select an Option</h3>
-						<ul>
-							<li><button onclick="load_shelf_config('hoge');" id="test_button">hoge</button></li>
-							<li>Option 2</li>
-							<li>Option 3</li>
-						</ul> -->
-						<button id="closeButton">Close</button>
-					</div>
-				</div>
 				{% else %}
 				<label for="imgsize_slider">Image Size:</label><input type="range" id="imgsize_slider" min="80" max="400" step="1" value="300" style="width:500px">
 				{% endif %}
