@@ -40,6 +40,10 @@ else:
 	local_ip = "127.0.0.1"
 local_url = 'http://{}:{}'.format(local_ip,settings["port"])
 
+shelf_configs_path = shelf_info_path/"shelf_configs"
+if(not shelf_configs_path.exists()):
+	shelf_configs_path.mkdir()
+
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
@@ -55,6 +59,29 @@ def series_view():
 	else:
 		series_id = None
 	return render_template('index.html', local_url=local_url, series_shelf_id=series_id)
+
+@app.route('/save_shelf_config',methods=["POST"])
+def save_shelf_config():
+	reqjson = request.json["data"]
+	config_name = request.json["name"]+".json"
+	if config_name=='.json': # 何も入力されていなかった場合
+		return {}
+	with open(shelf_configs_path/config_name, "w") as f:
+		simplejson.dump(reqjson,f,indent=4)
+	return {}
+
+@app.route('/load_shelf_config',methods=["POST"])
+def load_shelf_config():
+	config_name = request.json["name"]+".json"
+	with open(shelf_configs_path/config_name, "r") as f:
+		shelf_config = simplejson.load(f)
+	return Response(simplejson.dumps(shelf_config,ignore_nan=True),mimetype="application/json")
+
+@app.route('/get_shelf_config_list',methods=["POST"])
+def get_shelf_config_list():
+	path_list = sorted(shelf_configs_path.glob("*.json"))
+	config_list = [path.stem for path in path_list]
+	return Response(simplejson.dumps({"shelf_config_list":config_list},ignore_nan=True),mimetype="application/json")
 
 @app.route('/get_book_info',methods=["POST"])
 def get_book_info():

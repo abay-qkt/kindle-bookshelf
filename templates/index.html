@@ -5,7 +5,7 @@
 		<title>KINDLE MANGA SHELF</title>
 		<link href="../static/bookshelf.css" rel="stylesheet" type="text/css">
 		<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-		<script src="https://cdn.it-the-best.com/jquery/plugin/listmousedrag/2.6.2/listmousedragscroll.min.js"></script>
+		<!-- <script src="https://cdn.it-the-best.com/jquery/plugin/listmousedrag/2.6.2/listmousedragscroll.min.js"></script> -->
 	</head>
 	<body>
 		<div class="status_bar">
@@ -27,6 +27,21 @@
 				<br>
 				<label for="query_box">Query:</label><input type="text" id="query_box" size="80" value="">
 				<button onclick="send_query();" id="apply2">Apply</button>
+				<br>
+				<button id="openButton">Open Selection</button>
+				<div class="overlay" id="overlay">
+					<div id="config_window" class="popup">
+						<label for="config_box">Shelf name for saving:</label><input type="text" id="config_box" size="40" value="">
+						<button onclick="save_shelf_config();" id="save">Save</button>
+						<!-- <h3>Select an Option</h3>
+						<ul>
+							<li><button onclick="load_shelf_config('hoge');" id="test_button">hoge</button></li>
+							<li>Option 2</li>
+							<li>Option 3</li>
+						</ul> -->
+						<button id="closeButton">Close</button>
+					</div>
+				</div>
 				{% else %}
 				<label for="imgsize_slider">Image Size:</label><input type="range" id="imgsize_slider" min="80" max="400" step="1" value="300" style="width:500px">
 				{% endif %}

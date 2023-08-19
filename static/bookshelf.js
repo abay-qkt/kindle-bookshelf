@@ -64,7 +64,7 @@ function draw_option_bar(){
   if(series_shelf_id==""){ // 全シリーズ表示する本棚の場合
     // カラム数ドロップダウン
     var select_colnum = document.getElementById("colnum_dd")
-    for(var i=1;i<10;i++){
+    for(var i=1;i<=50;i++){
       var option_colnum =  document.createElement("option");
       option_colnum.setAttribute("value",i);
       option_colnum.innerHTML = i
@@ -119,6 +119,8 @@ function draw_option_bar(){
         send_query();
       }
     };
+
+    make_load_config_window();
 
   }else{  // 一つのシリーズのみを表示する本棚の場合
     is_grid = false
@@ -247,7 +249,7 @@ function draw_shelf(){
     
     // 慣性スクロール設定
     // Copyright (c) 2020 https://www.it-the-best.com https://www.it-the-best.com/entry/jquery-plugin-mousedragscroll
-    $(".scroll_lst").setListmousedragscroll({"inertia":true,"loop":false});
+    // $(".scroll_lst").setListmousedragscroll({"inertia":true,"loop":false});
   }
 }
 
@@ -347,17 +349,117 @@ function update_rating(){
 
 // オプションバーから設定値を取得しクエリを投げる
 function send_query(){
-  var sort_key = document.getElementById("sort_dd").value
-  var is_asc  = document.getElementById("asc_dd").value
-  var keywords = document.getElementById("keyword_box").value
-  var query = document.getElementById("query_box").value
   data_dict = {
-    "sort_keys":sort_key,
-    "is_asc":is_asc,
-    "keywords":keywords,
-    "query":query
+    "sort_keys":document.getElementById("sort_dd").value,
+    "is_asc":document.getElementById("asc_dd").value,
+    "keywords":document.getElementById("keyword_box").value,
+    "query":document.getElementById("query_box").value
   }
   call_api("get_book_info",arg_data={"data":data_dict})
+}
+
+// オプションバーから設定値を取得しクエリを投げて保存する
+function save_shelf_config(){
+  data_dict = {
+    "colnum":document.getElementById("colnum_dd").value,
+    "imgsize":document.getElementById("imgsize_slider").value,
+    "sort_keys":document.getElementById("sort_dd").value,
+    "is_asc":document.getElementById("asc_dd").value,
+    "keywords":document.getElementById("keyword_box").value,
+    "query":document.getElementById("query_box").value,
+    "show_all_mode":document.getElementById("show_all_mode").checked,
+    "is_grid":is_grid
+  }
+  $.ajax({
+    type: 'POST',
+    url : local_url+'/save_shelf_config',
+    data: JSON.stringify({"data":data_dict,"name":document.getElementById("config_box").value}),
+    contentType:'application/json'
+  }).done(function(res,textStatus,jqXHR){
+    console.log("saved");
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    console.log(textStatus);
+    console.log(jqXHR);
+    console.log(errorThrown);
+    alert(textStatus);
+  });
+}
+
+function load_shelf_config(shelf_config_name){
+  $.ajax({
+    type: 'POST',
+    url : local_url+"/load_shelf_config",
+    data: JSON.stringify({"name":shelf_config_name}),
+    contentType:'application/json'
+  }).done(function(res,textStatus,jqXHR){
+    document.getElementById("colnum_dd").value=res["colnum"]
+    edit_style(res["colnum"]);
+    document.getElementById("imgsize_slider").value=res["imgsize"]
+    edit_book_size(res["imgsize"]);
+    document.getElementById("sort_dd").value=res["sort_keys"]
+    document.getElementById("asc_dd").value=res["is_asc"]
+    document.getElementById("keyword_box").value=res["keywords"]
+    document.getElementById("query_box").value=res["query"]
+    document.getElementById("show_all_mode").checked=res["show_all_mode"]
+    is_grid=res["is_grid"]
+    send_query();
+    // draw_rating();
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    console.log(textStatus,jqXHR,errorThrown);
+    console.log(jqXHR);
+    console.log(errorThrown);
+    alert(textStatus);
+  });
+}
+
+// 本棚設定保存・ロード画面
+function make_load_config_window(){
+  const openButton = document.getElementById('openButton');
+  const overlay = document.getElementById('overlay');
+  const closeButton = document.getElementById('closeButton');
+
+  var ul_config = document.createElement('ul');
+  ul_config.setAttribute("id","config_ul");
+  var config_window = document.getElementById('config_window');
+  config_window.appendChild(ul_config);
+
+  openButton.addEventListener('click', () => {
+    overlay.style.display = 'flex';
+    get_shelf_config_list();
+  });
+  closeButton.addEventListener('click', () => {
+    overlay.style.display = 'none';
+  });
+}
+
+// フォルダから本棚設定jsonのリストを取得
+function get_shelf_config_list(){
+  $.ajax({
+    type: 'POST',
+    url : local_url+"/get_shelf_config_list",
+    data: JSON.stringify({}),
+    contentType:'application/json'
+  }).done(function(res,textStatus,jqXHR){
+    console.log("done")
+    var shelf_config_list = res["shelf_config_list"]
+    var ul_config = document.getElementById('config_ul');
+    ul_config.innerHTML="";
+    if(shelf_config_list.length>0){
+      for(var sc of shelf_config_list){
+        var li_config =  document.createElement("li");
+        var btn_config = document.createElement("button")
+        btn_config.setAttribute("onclick",`load_shelf_config('${sc}');`)
+        btn_config.innerHTML=sc
+        li_config.appendChild(btn_config)
+        ul_config.appendChild(li_config)
+      }
+    }
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    console.log(textStatus,jqXHR,errorThrown);
+    console.log(jqXHR);
+    console.log(errorThrown);
+    alert(textStatus);
+  });
 }
 
 function get_one_series(){
