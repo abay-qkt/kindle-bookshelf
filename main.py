@@ -90,6 +90,15 @@ def get_book_info():
 
 	book_df = pd.merge(book_df,series_df,on='series_id',how='left')
 
+	# 著者名をseries_idにした場合も想定したソート
+	# シリーズの初出版日→シリーズ内の出版日(→タイトルの読み仮名)　の順でソート
+	series_first_publication_date = book_df.groupby("series_id")["publication_date"].min().rename("series_first_publication_date").reset_index()
+	book_df = pd.merge(book_df,series_first_publication_date,on='series_id',how='left')
+	book_df = book_df.sort_values(["series_first_publication_date","publication_date","title_pron"])
+	book_df = book_df.drop(["series_first_publication_date"],axis=1)
+
+	# book_df["series_id"] = book_df["authors"] # 後で対応するためのテスト
+
 	reqjson = request.json["data"]
 	if(reqjson):
 		print(reqjson)
@@ -101,7 +110,7 @@ def get_book_info():
 
 			ret["purchases"] = x.shape[0]
 			ret["series_pron"] = x["series_pron"].iloc[0]
-			ret["author_pron"] = x["authors"].iloc[0]
+			ret["author_pron"] = x["authors_pron"].iloc[0]
 
 			ret["oldest_publication"] = x["publication_date"].min()
 			ret["latest_publication"] = x["publication_date"].max()
@@ -116,7 +125,6 @@ def get_book_info():
 			return pd.Series(ret)
 
 		series_df =   (book_df
-		 				.sort_values("series_num")
 						.groupby("series_id")
 						.apply(agg_series_info)
 						.reset_index())
@@ -136,7 +144,7 @@ def get_book_info():
 	book_df["publication_date"] = book_df["publication_date"].astype("int64")//10**9
 	book_df["purchase_date"] = book_df["purchase_date"].astype("int64")//10**9
 
-	book_dict = book_df.sort_values("series_num").to_dict(orient="records")
+	book_dict = book_df.to_dict(orient="records")
 	series_dict =  series_df.to_dict(orient="records")
 	ret_dict = {"book":book_dict,"series":series_dict}
 	# nanをnullにするため、flaskのjsonifyは使わずsimplejsonを使う

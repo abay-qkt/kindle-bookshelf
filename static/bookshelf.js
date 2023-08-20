@@ -16,7 +16,6 @@ $(function() { //ヘッダーの高さ分だけコンテンツを下げる
 });
 
 if(series_shelf_id==""){
-  call_api("get_book_info");
   load_shelf_config("default");
 }else{
   get_one_series();
@@ -397,10 +396,6 @@ function load_shelf_config(shelf_config_name){
     data: JSON.stringify({"name":shelf_config_name}),
     contentType:'application/json'
   }).done(function(res,textStatus,jqXHR){
-    document.getElementById("colnum_dd").value=res["colnum"]
-    edit_style(res["colnum"]);
-    document.getElementById("imgsize_slider").value=res["imgsize"]
-    edit_book_size(res["imgsize"]);
     document.getElementById("sort_dd").value=res["sort_keys"]
     document.getElementById("asc_dd").value=res["is_asc"]
     document.getElementById("keyword_box").value=res["keywords"]
@@ -408,6 +403,11 @@ function load_shelf_config(shelf_config_name){
     document.getElementById("show_all_mode").checked=res["show_all_mode"]
     is_grid=res["is_grid"]
     send_query();
+
+    document.getElementById("colnum_dd").value=res["colnum"]
+    document.getElementById("imgsize_slider").value=res["imgsize"]
+    edit_style(res["colnum"]);
+    edit_book_size(res["imgsize"]);
     // draw_rating();
   }).fail(function(jqXHR, textStatus, errorThrown) {
     console.log(textStatus,jqXHR,errorThrown);
