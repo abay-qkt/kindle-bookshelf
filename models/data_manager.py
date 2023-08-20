@@ -1,6 +1,7 @@
 from .bookcover_manager import BookCoverManager
 from pathlib import Path
 import pandas as pd
+import sqlite3
 import xmltodict
 import re
 
@@ -89,6 +90,29 @@ def get_series_df(book_df):
                 .rename(columns={"title":"first_title","series_num":"series_count"}))
     return series_df
 
+def read_kindle_collection(metadata_path,book_df):
+    collection_path = metadata_path/"db/synced_collections.db"
+    conn = sqlite3.connect(collection_path)
+    collections_df = pd.read_sql_query('SELECT * FROM cloud_collections', conn)
+    collections_items_df = pd.read_sql_query('SELECT * FROM cloud_collections_items', conn)
+    # コレクションIDと名前の紐づけ
+    clctn_df = (pd.merge(collections_items_df,
+                        collections_df[["id","name"]].rename(columns={"name":"collection_name"}),
+                        left_on='collection_id',
+                        right_on='id')
+                .drop(['id'],axis=1))
+
+    # 書籍名とASINの紐づけ
+    clctn_df = (pd.merge(clctn_df,
+                        book_df,#[["ASIN","title"]],
+                        left_on='book_asin',
+                        right_on='ASIN')
+                .drop(['book_asin'],axis=1))
+    # datetime型に変換
+    clctn_df['last_updated_timestamp'] = (pd.to_datetime(clctn_df['last_updated_timestamp'])
+                                        .dt.tz_convert('Asia/Tokyo').dt.tz_localize(None))
+    return clctn_df
+
 class DataManager():
     def __init__(self,metadata_path,shelf_info_path,bookcovers_path):
         self.metadata_path   = Path(metadata_path)
@@ -106,22 +130,26 @@ class DataManager():
         series_df = get_series_df(book_df)
         series_df["rating"] = None
         series_df["tags"] = None
+        clctn_df = read_kindle_collection(self.metadata_path,book_df)
 
         with pd.ExcelWriter(self.shelf_info_path/'shelf_info.xlsx') as writer:
             book_df.to_excel(writer,index=False, sheet_name='book')
             series_df.to_excel(writer, index=False, sheet_name='series')
+            clctn_df.to_excel(writer, index=False, sheet_name='collection')
         
         self.bcover_manager.add_bookcovers(book_df)
 
     def update_from_kindle(self):
         book_df = read_kindle_metadata(self.metadata_path)
         series_df = get_series_df(book_df)
+        clctn_df = read_kindle_collection(self.metadata_path,book_df)
 
         prev_series_df = pd.read_excel(self.shelf_info_path/'shelf_info.xlsx',sheet_name='series')
         series_df = pd.merge(series_df,prev_series_df[["series_id","rating","tags"]],on='series_id',how='left')
 
         with pd.ExcelWriter(self.shelf_info_path/'shelf_info.xlsx') as writer:
             book_df.to_excel(writer,index=False, sheet_name='book')
-            series_df.to_excel(writer, index=False, sheet_name='series')        
+            series_df.to_excel(writer, index=False, sheet_name='series')       
+            clctn_df.to_excel(writer, index=False, sheet_name='collection') 
             
         self.bcover_manager.add_bookcovers(book_df)

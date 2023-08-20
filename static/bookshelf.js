@@ -80,7 +80,7 @@ function draw_option_bar(){
 
     // 本棚タイプのドロップダウン
     var select_shelf = document.getElementById("shelf_dd");
-    var shelf_keys = ["series","author"]
+    var shelf_keys = ["series","author","collection"]
     for(var key of shelf_keys){
       var option_shelf =  document.createElement("option");
       option_shelf.setAttribute("value",key);
@@ -162,7 +162,7 @@ function draw_shelf(){
       return bdl["series_id"] == series_id
     });
 
-    var series_link_url = local_url+"/series_shelf?series_id="+series_id;
+    var series_link_url = local_url+"/series_shelf?series_id="+encodeURIComponent(series_id);
     if(is_grid){ // グリッド表示の場合
       // シリーズ一つ分の棚
       var div_oneshelf = document.createElement('div');
@@ -177,6 +177,18 @@ function draw_shelf(){
       a_series_link.setAttribute("target","_blank");
       a_series_link.setAttribute("rel","noopener");
       div_oneshelf.appendChild(a_series_link)
+
+      // URLパラメータとして本棚タイプの追加
+      // クロージャを使用して a_series_link 要素を参照する
+      // a_series_linkの参照先はforループで上書きされていくので、
+      // クロージャ使わないとイベント発火時最後のa_series_linkが呼ばれることになる
+      a_series_link.addEventListener("click", function(a_series_link) {
+        return function(event) {
+            event.preventDefault();
+            var newURL = a_series_link.getAttribute("href") + "&shelf_type=" + encodeURIComponent(document.getElementById("shelf_dd").value);
+            window.open(newURL, "_blank");
+        };
+      }(a_series_link));
 
       // 評価情報ボックス
       var div_param_box = document.createElement('div');
@@ -485,7 +497,8 @@ function get_shelf_config_list(){
 
 function get_one_series(){
   data_dict = {
-    "query":"series_id=='"+series_shelf_id+"'"
+    "query":"series_id=='"+series_shelf_id+"'",
+    "shelf_keys":series_shelf_type
   }
   call_api("get_book_info",arg_data={"data":data_dict})
 }

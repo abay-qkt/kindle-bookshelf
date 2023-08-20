@@ -50,15 +50,16 @@ app.config["JSON_AS_ASCII"] = False
 @app.route('/')
 def main_view():
 	update_info()
-	return render_template('index.html', local_url=local_url ,series_shelf_id="")
+	return render_template('index.html', local_url=local_url ,series_shelf_id="",series_shelf_type="")
 
 @app.route('/series_shelf')
 def series_view():
 	if request.args.get("series_id") is not None:
 		series_id = request.args.get('series_id')
+		shelf_type = request.args.get('shelf_type')
 	else:
 		series_id = None
-	return render_template('index.html', local_url=local_url, series_shelf_id=series_id)
+	return render_template('index.html', local_url=local_url, series_shelf_id=series_id, series_shelf_type=shelf_type)
 
 @app.route('/save_shelf_config',methods=["POST"])
 def save_shelf_config():
@@ -97,14 +98,19 @@ def get_book_info():
 	book_df = book_df.sort_values(["series_first_publication_date","publication_date","title_pron"])
 	book_df = book_df.drop(["series_first_publication_date"],axis=1)
 
-	# book_df["series_id"] = book_df["authors"] # 後で対応するためのテスト
-
 	reqjson = request.json["data"]
+	print(reqjson)
+	print("~~~")
 	if(reqjson):
 		print(reqjson)
 		if("shelf_keys" in reqjson.keys()):
 			if(reqjson["shelf_keys"])=='author':
 				book_df["series_id"] = book_df["authors"]
+			elif(reqjson["shelf_keys"]=='collection'):
+				clctn_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='collection')
+				clctn_df = clctn_df.drop(["last_updated_timestamp"],axis=1).sort_values(["publication_date","title"])
+				book_df = pd.merge(clctn_df,book_df[["ASIN","rating","tags"]],on='ASIN',how='left')
+				book_df["series_id"] = book_df["collection_id"]
 		if("sort_keys" in reqjson.keys() and reqjson["sort_keys"] in ["oldest_publication","latest_publication"]):
 			book_df = book_df[book_df["publication_date"]!="2200-01-01 00:00:00"]  # 発行日に基づくソートの場合、発行日が欠損の物は除外
 		def agg_series_info(x):
@@ -138,6 +144,7 @@ def get_book_info():
 			series_df = series_df[series_df["keywords"].str.contains("|".join(reqjson["keywords"].upper().replace("　"," ").split(" ")))]
 		if("query" in reqjson.keys() and reqjson["query"]!=""):
 			series_df = series_df.query(reqjson["query"])
+			print(series_df)
 
 		date_cols = ["oldest_publication","latest_publication",
 					 "oldest_purchase","latest_purchase"]
@@ -160,9 +167,11 @@ def edit_series_review():
 	series_dict.loc[added_dict.index,series_dict.columns] = added_dict.loc[:,series_dict.columns]
 	series_df = series_dict.reset_index()
 	book_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='book')
+	clctn_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='collection')
 	with pd.ExcelWriter(shelf_info_path/'shelf_info.xlsx') as writer:
 		book_df.to_excel(writer, index=False, sheet_name='book')  
 		series_df.to_excel(writer, index=False, sheet_name='series')  
+		clctn_df.to_excel(writer, index=False, sheet_name='collection') 
 	return {}
 
 # @app.route('/update_info',methods=["POST"])
