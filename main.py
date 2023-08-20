@@ -102,6 +102,9 @@ def get_book_info():
 	reqjson = request.json["data"]
 	if(reqjson):
 		print(reqjson)
+		if("shelf_keys" in reqjson.keys()):
+			if(reqjson["shelf_keys"])=='author':
+				book_df["series_id"] = book_df["authors"]
 		if("sort_keys" in reqjson.keys() and reqjson["sort_keys"] in ["oldest_publication","latest_publication"]):
 			book_df = book_df[book_df["publication_date"]!="2200-01-01 00:00:00"]  # 発行日に基づくソートの場合、発行日が欠損の物は除外
 		def agg_series_info(x):

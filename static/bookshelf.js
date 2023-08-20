@@ -16,7 +16,8 @@ $(function() { //ヘッダーの高さ分だけコンテンツを下げる
 });
 
 if(series_shelf_id==""){
-  load_shelf_config("default");
+  send_query();
+  // load_shelf_config("default");
 }else{
   get_one_series();
 }
@@ -76,6 +77,18 @@ function draw_option_bar(){
       var selectedItem = this.options[ this.selectedIndex ];
       edit_style(selectedItem.value);
     }
+
+    // 本棚タイプのドロップダウン
+    var select_shelf = document.getElementById("shelf_dd");
+    var shelf_keys = ["series","author"]
+    for(var key of shelf_keys){
+      var option_shelf =  document.createElement("option");
+      option_shelf.setAttribute("value",key);
+      option_shelf.innerHTML = key
+      select_shelf.appendChild(option_shelf);
+    }
+    select_shelf.options[0].selected = true
+    select_shelf.onchange = send_query;
 
     // ソートキーのドロップダウン
     var select_sort = document.getElementById("sort_dd");
@@ -349,11 +362,22 @@ function update_rating(){
 // オプションバーから設定値を取得しクエリを投げる
 function send_query(){
   data_dict = {
+    "shelf_keys":document.getElementById("shelf_dd").value,
     "sort_keys":document.getElementById("sort_dd").value,
     "is_asc":document.getElementById("asc_dd").value,
     "keywords":document.getElementById("keyword_box").value,
     "query":document.getElementById("query_box").value
   }
+
+  var edit_check = document.getElementById("edit_mode_check")
+  if(data_dict["shelf_keys"]!='series'){
+    edit_check.checked=false
+    edit_check.disabled=true
+  }else{
+    edit_check.disabled=false
+  }
+  switch_show_rating()
+
   call_api("get_book_info",arg_data={"data":data_dict})
 }
 
@@ -367,6 +391,7 @@ function log_ajax_fail(jqXHR, textStatus, errorThrown){
 // オプションバーから設定値を取得しクエリを投げて保存する
 function save_shelf_config(){
   data_dict = {
+    "shelf_keys":document.getElementById("shelf_dd").value,
     "colnum":document.getElementById("colnum_dd").value,
     "imgsize":document.getElementById("imgsize_slider").value,
     "sort_keys":document.getElementById("sort_dd").value,
@@ -396,6 +421,7 @@ function load_shelf_config(shelf_config_name){
     data: JSON.stringify({"name":shelf_config_name}),
     contentType:'application/json'
   }).done(function(res,textStatus,jqXHR){
+    document.getElementById("shelf_dd").value=res["shelf_keys"]
     document.getElementById("sort_dd").value=res["sort_keys"]
     document.getElementById("asc_dd").value=res["is_asc"]
     document.getElementById("keyword_box").value=res["keywords"]
