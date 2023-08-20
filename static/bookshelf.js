@@ -17,6 +17,7 @@ $(function() { //ヘッダーの高さ分だけコンテンツを下げる
 
 if(series_shelf_id==""){
   call_api("get_book_info");
+  load_shelf_config("default");
 }else{
   get_one_series();
 }
@@ -81,8 +82,7 @@ function draw_option_bar(){
     var select_sort = document.getElementById("sort_dd");
     var sort_keys = ["rating","series_pron","author_pron","purchases",
                     "oldest_publication","latest_publication",
-                    "oldest_purchase","latest_purchase",
-                    "early_purchase","late_purchase"]
+                    "oldest_purchase","latest_purchase"]
     for(var key of sort_keys){
       var option_sort =  document.createElement("option");
       option_sort.setAttribute("value",key);

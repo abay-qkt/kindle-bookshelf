@@ -88,19 +88,17 @@ def get_book_info():
 	book_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='book')
 	series_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='series')
 
-	series_df = series_df.sort_values(["rating"],ascending=False)
-	
-	book_df["purchase_timing"] = (book_df["purchase_date"]-book_df["publication_date"]).dt.total_seconds()
+	book_df = pd.merge(book_df,series_df,on='series_id',how='left')
 
 	reqjson = request.json["data"]
 	if(reqjson):
 		print(reqjson)
-		if("sort_keys" in reqjson.keys() and reqjson["sort_keys"] in ["oldest_publication","latest_publication","early_purchase","late_purchase"]):
+		if("sort_keys" in reqjson.keys() and reqjson["sort_keys"] in ["oldest_publication","latest_publication"]):
 			book_df = book_df[book_df["publication_date"]!="2200-01-01 00:00:00"]  # 発行日に基づくソートの場合、発行日が欠損の物は除外
-		if("sort_keys" in reqjson.keys() and reqjson["sort_keys"]!="rating"):
-			book_df = book_df[book_df["series_id"]!="no_series_id"] # シリーズのソートの邪魔になるためシリーズもの以外は除外
 		def agg_series_info(x):
 			ret = {}
+			ret["rating"] = x["rating"].max()
+
 			ret["purchases"] = x.shape[0]
 			ret["series_pron"] = x["series_pron"].iloc[0]
 			ret["author_pron"] = x["authors"].iloc[0]
@@ -109,8 +107,6 @@ def get_book_info():
 			ret["latest_publication"] = x["publication_date"].max()
 			ret["oldest_purchase"] = x["purchase_date"].min()
 			ret["latest_purchase"] = x["purchase_date"].max()
-			ret["early_purchase"] = x["purchase_timing"].min()
-			ret["late_purchase"]  = x["purchase_timing"].max()
 
 			keywords = [x["title"].iloc[0]]
 			keywords.extend(set(x["authors"].fillna("")))
@@ -119,13 +115,12 @@ def get_book_info():
 
 			return pd.Series(ret)
 
-		additional_info =   (book_df.sort_values("series_num")
-							.groupby("series_id")
-							.apply(agg_series_info))
-		series_df = pd.merge(series_df,additional_info , on="series_id", how="left")
-
-		series_df = series_df[series_df["series_id"].isin(book_df["series_id"].unique())]  # bookを持たないseriesを削除
-
+		series_df =   (book_df
+		 				.sort_values("series_num")
+						.groupby("series_id")
+						.apply(agg_series_info)
+						.reset_index())
+		
 		if("sort_keys" in reqjson.keys()):
 			series_df = series_df.sort_values(reqjson["sort_keys"],ascending=int(reqjson["is_asc"]))
 		if("keywords" in reqjson.keys() and reqjson["keywords"]!=""):
@@ -134,8 +129,7 @@ def get_book_info():
 			series_df = series_df.query(reqjson["query"])
 
 		date_cols = ["oldest_publication","latest_publication",
-					 "oldest_purchase","latest_purchase",
-					 "early_purchase","late_purchase"]
+					 "oldest_purchase","latest_purchase"]
 		series_df[date_cols] = series_df[date_cols].astype("int64")//10**9  # json化するために数値にする	
 
 	# json化するために数値に戻す	
