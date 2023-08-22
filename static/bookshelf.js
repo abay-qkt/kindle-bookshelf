@@ -273,7 +273,7 @@ function draw_shelf(){
     
     // 慣性スクロール設定
     // Copyright (c) 2020 https://www.it-the-best.com https://www.it-the-best.com/entry/jquery-plugin-mousedragscroll
-    // $(".scroll_lst").setListmousedragscroll({"inertia":true,"loop":false});
+    $(".scroll_lst").setListmousedragscroll({"inertia":true,"loop":false});
   }
 }
 

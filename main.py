@@ -99,8 +99,6 @@ def get_book_info():
 	book_df = book_df.drop(["series_first_publication_date"],axis=1)
 
 	reqjson = request.json["data"]
-	print(reqjson)
-	print("~~~")
 	if(reqjson):
 		print(reqjson)
 		if("shelf_keys" in reqjson.keys()):
@@ -144,7 +142,6 @@ def get_book_info():
 			series_df = series_df[series_df["keywords"].str.contains("|".join(reqjson["keywords"].upper().replace("　"," ").split(" ")))]
 		if("query" in reqjson.keys() and reqjson["query"]!=""):
 			series_df = series_df.query(reqjson["query"])
-			print(series_df)
 
 		date_cols = ["oldest_publication","latest_publication",
 					 "oldest_purchase","latest_purchase"]
