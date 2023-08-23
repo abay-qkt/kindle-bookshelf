@@ -363,10 +363,10 @@ function switch_show_all(){
 function update_rating(){
   for(i in series_list){
       elm = series_list[i]
-      if(document.getElementById(elm.series_id+"_rating")==null){continue}
+      // if(document.getElementById(elm.series_id+"_rating")==null){continue}
       elm.rating = Number(document.getElementById(elm.series_id+"_rating").value) // Number()は数字以外が入っているとnullになる
       elm.tags = document.getElementById(elm.series_id+"_tags").value
-      elm.tags = elm.tags=="null" ? null:elm.tags // tagsは文字列にしているため、nullを文字列としてとってしまうので変換。
+      elm.tags = elm.tags=="undefined" ? null:elm.tags // tagsは文字列にしているため、nullを文字列としてとってしまうので変換。
   }
   edit_series_review({"series_param":series_list});
 }

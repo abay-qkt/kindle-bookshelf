@@ -128,8 +128,8 @@ class DataManager():
     def init_book_db(self):
         book_df = read_kindle_metadata(self.metadata_path)
         series_df = get_series_df(book_df)
-        series_df["rating"] = None
-        series_df["tags"] = None
+        series_df["rating"] = pd.NA
+        series_df["tags"] = pd.NA
         clctn_df = read_kindle_collection(self.metadata_path,book_df)
 
         with pd.ExcelWriter(self.shelf_info_path/'shelf_info.xlsx') as writer:

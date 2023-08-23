@@ -103,6 +103,13 @@ def get_book_info():
 		print(reqjson)
 		if("shelf_keys" in reqjson.keys()):
 			if(reqjson["shelf_keys"])=='author':
+				# 漫画シリーズにおいて著者が複数いる場合、Amazon側の登録漏れで一部の巻だけ著者１名の場合が多々ある
+				# それを修正する。（実際に一部の巻だけ著者が１名になるケースは存在するが、登録漏れを修正することを優先）
+				authors_dict = book_df.groupby("series_id")["authors"].apply(lambda x:x[x.fillna("").str.len().idxmax()]).to_dict()
+				authors_pron_dict = book_df.groupby("series_id")["authors_pron"].apply(lambda x:x[x.fillna("").str.len().idxmax()]).to_dict()
+				book_df["authors"] = book_df["series_id"].map(authors_dict)
+				book_df["authors_pron"] = book_df["series_id"].map(authors_pron_dict)
+
 				book_df["series_id"] = book_df["authors"]
 			elif(reqjson["shelf_keys"]=='collection'):
 				clctn_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='collection')
@@ -114,6 +121,7 @@ def get_book_info():
 		def agg_series_info(x):
 			ret = {}
 			ret["rating"] = x["rating"].max()
+			ret["tags"] = "/".join(x["tags"].drop_duplicates().fillna(""))
 
 			ret["purchases"] = x.shape[0]
 			ret["series_pron"] = x["series_pron"].iloc[0]
@@ -161,7 +169,7 @@ def get_book_info():
 def edit_series_review():
 	series_dict = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='series').set_index("series_id")
 	added_dict = pd.DataFrame.from_dict(request.json["series_param"]).set_index("series_id")
-	series_dict.loc[added_dict.index,series_dict.columns] = added_dict.loc[:,series_dict.columns]
+	series_dict.loc[added_dict.index,["rating","tags"]] = added_dict.loc[:,["rating","tags"]]
 	series_df = series_dict.reset_index()
 	book_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='book')
 	clctn_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='collection')
