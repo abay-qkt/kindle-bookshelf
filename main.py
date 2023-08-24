@@ -43,6 +43,19 @@ local_url = 'http://{}:{}'.format(local_ip,settings["port"])
 shelf_configs_path = shelf_info_path/"shelf_configs"
 if(not shelf_configs_path.exists()):
 	shelf_configs_path.mkdir()
+	default_shelf = {
+		"colnum": "3",
+		"imgsize": "160",
+		"sort_keys": "rating",
+		"is_asc": "0",
+		"keywords": "",
+		"query": "",
+		"show_all_mode": True,
+		"is_grid": True
+	}
+	with open(shelf_configs_path/"default.json","w") as f:
+		simplejson.dump(default_shelf,f,indent=4)
+
 
 shelf_config_js_path = Path("static/shelf_config_name.js")
 if(not (shelf_config_js_path).exists()):

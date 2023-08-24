@@ -427,8 +427,6 @@ function save_shelf_config(){
 }
 
 function load_shelf_config(shelf_config_name){
-  console.log(shelf_config_name)
-  console.log("__________aa_")
   $.ajax({
     type: 'POST',
     url : local_url+"/load_shelf_config",
