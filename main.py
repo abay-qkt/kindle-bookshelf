@@ -26,7 +26,7 @@ if(not settings_path.exists()):
 	with open(settings_path, "w") as f:
 		simplejson.dump({"metadata_path":None,"local_ip":None,"port":5000},f,indent=4)
 
-with open(Path(shelf_info_path)/"settings.json", "r") as f:
+with open(shelf_info_path/"settings.json", "r") as f:
 	settings = simplejson.load(f)
 
 if(settings["metadata_path"]):
@@ -43,6 +43,11 @@ local_url = 'http://{}:{}'.format(local_ip,settings["port"])
 shelf_configs_path = shelf_info_path/"shelf_configs"
 if(not shelf_configs_path.exists()):
 	shelf_configs_path.mkdir()
+
+shelf_config_js_path = Path("static/shelf_config_name.js")
+if(not (shelf_config_js_path).exists()):
+	with open(shelf_config_js_path, "w") as f:
+		f.write("var shelf_config_name='default'")
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
@@ -73,9 +78,11 @@ def save_shelf_config():
 
 @app.route('/load_shelf_config',methods=["POST"])
 def load_shelf_config():
-	config_name = request.json["name"]+".json"
-	with open(shelf_configs_path/config_name, "r") as f:
+	config_name = request.json["name"]
+	with open(shelf_configs_path/(config_name+".json"), "r") as f:
 		shelf_config = simplejson.load(f)
+	with open(shelf_config_js_path, "w") as f:
+		f.write("var shelf_config_name='"+config_name+"'")
 	return Response(simplejson.dumps(shelf_config,ignore_nan=True),mimetype="application/json")
 
 @app.route('/get_shelf_config_list',methods=["POST"])
