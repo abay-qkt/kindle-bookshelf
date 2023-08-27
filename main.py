@@ -43,18 +43,19 @@ local_url = 'http://{}:{}'.format(local_ip,settings["port"])
 shelf_configs_path = shelf_info_path/"shelf_configs"
 if(not shelf_configs_path.exists()):
 	shelf_configs_path.mkdir()
-	default_shelf = {
-		"colnum": "3",
-		"imgsize": "160",
-		"sort_keys": "rating",
-		"is_asc": "0",
-		"keywords": "",
-		"query": "",
-		"show_all_mode": True,
-		"is_grid": True
-	}
-	with open(shelf_configs_path/"default.json","w") as f:
-		simplejson.dump(default_shelf,f,indent=4)
+default_shelf = {
+	"colnum": "3",
+	"imgsize": "160",
+	"sort_keys": "rating",
+	"is_asc": "0",
+	"keywords": "",
+	"query": "",
+	"show_all_mode": True,
+	"is_grid": True,
+	"is_reversed":True
+}
+with open(shelf_configs_path/"default.json","w") as f:
+	simplejson.dump(default_shelf,f,indent=4)
 
 
 shelf_config_js_path = Path("static/shelf_config_name.js")
@@ -92,7 +93,12 @@ def save_shelf_config():
 @app.route('/load_shelf_config',methods=["POST"])
 def load_shelf_config():
 	config_name = request.json["name"]
-	with open(shelf_configs_path/(config_name+".json"), "r") as f:
+	shelf_config_file = shelf_configs_path/(config_name+".json")
+	if not shelf_config_file.exists():# 前回のshelf_configのファイルが存在しない場合
+		config_name = "default"
+		shelf_config_file = shelf_configs_path/(config_name+".json")
+
+	with open(shelf_config_file, "r") as f:
 		shelf_config = simplejson.load(f)
 	with open(shelf_config_js_path, "w") as f:
 		f.write("var shelf_config_name='"+config_name+"'")

@@ -5,6 +5,7 @@ var series_list = []
 var imgsize_slider;
 
 var is_grid = true;
+var is_reversed = false;
 
 // オプションバーの設定
 draw_option_bar();
@@ -161,6 +162,9 @@ function draw_shelf(){
     var series_books = book_list.filter(function(bdl){
       return bdl["series_id"] == series_id
     });
+    if(is_reversed){
+      series_books.reverse();
+    }
 
     var series_link_url = local_url+"/series_shelf?series_id="+encodeURIComponent(series_id);
     if(is_grid){ // グリッド表示の場合
@@ -286,6 +290,13 @@ function switch_shelf(){
   draw_rating()
 }
 
+// 棚内の順序逆転
+function reverse_shelf(){
+  is_reversed = !is_reversed
+  draw_shelf()
+  draw_rating()
+}
+
 // 評価情報ボックスの描画
 function draw_rating(){
   var tabindex=100;
@@ -380,6 +391,7 @@ function send_query(){
     "keywords":document.getElementById("keyword_box").value,
     "query":document.getElementById("query_box").value
   }
+  console.log(data_dict["shelf_keys"])
 
   var edit_check = document.getElementById("edit_mode_check")
   if(data_dict["shelf_keys"]!='series'){
@@ -411,7 +423,8 @@ function save_shelf_config(){
     "keywords":document.getElementById("keyword_box").value,
     "query":document.getElementById("query_box").value,
     "show_all_mode":document.getElementById("show_all_mode").checked,
-    "is_grid":is_grid
+    "is_grid":is_grid,
+    "is_reversed":is_reversed
   }
   $.ajax({
     type: 'POST',
@@ -440,6 +453,7 @@ function load_shelf_config(shelf_config_name){
     document.getElementById("query_box").value=res["query"]
     document.getElementById("show_all_mode").checked=res["show_all_mode"]
     is_grid=res["is_grid"]
+    is_reversed=res["is_reversed"]
     send_query();
 
     document.getElementById("colnum_dd").value=res["colnum"]
