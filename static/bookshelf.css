@@ -79,6 +79,16 @@ a.cover_w img{
   width: 50px;
   height: 100%;
 }
+/* シリーズ本棚の名前 */
+.series_name{
+  position: absolute;  /* horizontal_scroll_wrapと重ねて表示させる */
+  top: 0px;
+  left: 0px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: bold;
+}
 
 .status_bar {
   position: fixed;

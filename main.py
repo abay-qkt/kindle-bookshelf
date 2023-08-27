@@ -137,11 +137,15 @@ def get_book_info():
 				book_df["authors_pron"] = book_df["series_id"].map(authors_pron_dict)
 
 				book_df["series_id"] = book_df["authors"]
+				book_df["series_title"] = book_df["authors"]
 			elif(reqjson["shelf_keys"]=='collection'):
 				clctn_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='collection')
 				clctn_df = clctn_df.drop(["last_updated_timestamp"],axis=1).sort_values(["publication_date","title"])
 				book_df = pd.merge(clctn_df,book_df[["ASIN","rating","tags"]],on='ASIN',how='left')
 				book_df["series_id"] = book_df["collection_id"]
+				book_df["series_title"] = book_df["collection_name"]
+			else:
+				book_df["series_title"] = book_df["series_id"]
 		if("sort_keys" in reqjson.keys() and reqjson["sort_keys"] in ["oldest_publication","latest_publication"]):
 			book_df = book_df[book_df["publication_date"]!="2200-01-01 00:00:00"]  # 発行日に基づくソートの場合、発行日が欠損の物は除外
 		def agg_series_info(x):
@@ -152,6 +156,8 @@ def get_book_info():
 			ret["purchases"] = x.shape[0]
 			ret["series_pron"] = x["series_pron"].iloc[0]
 			ret["author_pron"] = x["authors_pron"].iloc[0]
+
+			ret["series_title"] = x["series_title"].iloc[0]
 
 			ret["oldest_publication"] = x["publication_date"].min()
 			ret["latest_publication"] = x["publication_date"].max()
@@ -180,6 +186,8 @@ def get_book_info():
 		date_cols = ["oldest_publication","latest_publication",
 					 "oldest_purchase","latest_purchase"]
 		series_df[date_cols] = series_df[date_cols].astype("int64")//10**9  # json化するために数値にする	
+		if("shelf_keys" in reqjson.keys()):
+			series_df["shelf_type"]=reqjson["shelf_keys"] # データフレームだけ見てもseries_idが何を示しているかわかるように
 
 	# json化するために数値に戻す	
 	book_df["publication_date"] = book_df["publication_date"].astype("int64")//10**9

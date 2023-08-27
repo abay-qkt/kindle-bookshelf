@@ -162,6 +162,8 @@ function draw_shelf(){
     var series_books = book_list.filter(function(bdl){
       return bdl["series_id"] == series_id
     });
+    var series_title=series_list[i].series_title
+    var shelf_type= series_list[i].shelf_type // (iの値によらず全て同じ)
     if(is_reversed){
       series_books.reverse();
     }
@@ -172,6 +174,14 @@ function draw_shelf(){
       var div_oneshelf = document.createElement('div');
       div_oneshelf.setAttribute("id","hsw_"+series_id);
       div_oneshelf.setAttribute("class","horizontal_scroll_wrap");
+      
+      // 表示するシリーズタイトル
+      if(shelf_type!='series'){ // authorやcollectionの時だけ表示させる
+        var div_series_title = document.createElement('div');
+        div_series_title.setAttribute("class","series_name");
+        div_series_title.innerHTML = series_title
+        div_oneshelf.appendChild(div_series_title)
+      }
 
       // シリーズページへのリンク
       var a_series_link = document.createElement('a');
