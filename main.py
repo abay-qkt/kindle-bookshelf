@@ -146,8 +146,6 @@ def get_book_info():
 				book_df["series_title"] = book_df["collection_name"]
 			else:
 				book_df["series_title"] = book_df["series_id"]
-		if("sort_keys" in reqjson.keys() and reqjson["sort_keys"] in ["oldest_publication","latest_publication"]):
-			book_df = book_df[book_df["publication_date"]!="2200-01-01 00:00:00"]  # 発行日に基づくソートの場合、発行日が欠損の物は除外
 		def agg_series_info(x):
 			ret = {}
 			ret["rating"] = x["rating"].max()
@@ -176,8 +174,6 @@ def get_book_info():
 						.apply(agg_series_info)
 						.reset_index())
 		
-		if("sort_keys" in reqjson.keys()):
-			series_df = series_df.sort_values(reqjson["sort_keys"],ascending=int(reqjson["is_asc"]))
 		if("keywords" in reqjson.keys() and reqjson["keywords"]!=""):
 			series_df = series_df[series_df["keywords"].str.contains("|".join(reqjson["keywords"].upper().replace("　"," ").split(" ")))]
 		if("query" in reqjson.keys() and reqjson["query"]!=""):

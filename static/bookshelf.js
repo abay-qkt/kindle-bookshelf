@@ -103,11 +103,11 @@ function draw_option_bar(){
       select_sort.appendChild(option_sort);
     }
     select_sort.options[0].selected = true
-    select_sort.onchange = send_query;
+    select_sort.onchange = sort_shelf;
 
     // 昇順降順のドロップダウン
     var select_asc = document.getElementById("asc_dd");
-    var asc_dict = {"DESC":"0","ASC":"1"};
+    var asc_dict = {"DESC":"0","ASC":"1"}; // false/trueを入れてもsetAttributeすると文字列になるので。0,1にした
     for(var key of Object.keys(asc_dict)){
       var option_asc = document.createElement("option")
       option_asc.innerHTML = key
@@ -115,7 +115,7 @@ function draw_option_bar(){
       select_asc.appendChild(option_asc)
     }
     select_asc.options[0].selected = true
-    select_asc.onchange = send_query;
+    select_asc.onchange = sort_shelf;
 
     // キーワードのテキストボックス
     var inputtext_keywords = document.getElementById("keyword_box")
@@ -155,8 +155,28 @@ function make_browser_url(asin){
   return browser_url;
 }
 
+function sort_dictlist_by_key(key, is_asc) {
+  if(['series_pron','author_pron'].includes(key)){ // 文字列の場合
+    return (a, b) => {
+      return is_asc=="1" ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
+    };
+  }else{  // 数値の場合
+    return (a,b)=>{
+      var sign = is_asc=="1" ? 1:-1;
+      if (a[key] > b[key]){return 1*sign;}
+      else if (a[key] < b[key]){return -1*sign;}
+      else{return 0;}
+    }
+  }
+}
+
 function draw_shelf(){
   document.getElementById("bookshelf").innerHTML=""
+
+  var sort_key = document.getElementById('sort_dd').value
+  var is_asc = document.getElementById('asc_dd').value
+  series_list.sort(sort_dictlist_by_key(sort_key,is_asc))
+
   for(var i in series_list){
     var series_id = series_list[i].series_id
     var series_books = book_list.filter(function(bdl){
@@ -307,6 +327,12 @@ function reverse_shelf(){
   draw_rating()
 }
 
+// 本棚の並び替え
+function sort_shelf(){
+  draw_shelf()
+  draw_rating()
+}
+
 // 評価情報ボックスの描画
 function draw_rating(){
   var tabindex=100;
@@ -396,8 +422,6 @@ function update_rating(){
 function send_query(){
   data_dict = {
     "shelf_keys":document.getElementById("shelf_dd").value,
-    "sort_keys":document.getElementById("sort_dd").value,
-    "is_asc":document.getElementById("asc_dd").value,
     "keywords":document.getElementById("keyword_box").value,
     "query":document.getElementById("query_box").value
   }
