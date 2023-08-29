@@ -51,7 +51,7 @@ def metadata_list2df(metadata_list):
     book_df = book_df[~book_df["title"].str.contains("無料")]
 
     book_df = book_df[book_df["origin_type"]!="Sample"] # 書籍サンプルを除外
-    book_df[book_df["origin_type"]!="KindleDictionary"] # デフォルトで入っている辞書を除外
+    book_df = book_df[book_df["origin_type"]!="KindleDictionary"] # デフォルトで入っている辞書を除外
     
     # kindleに最初から入っている辞書でpronunciationが空になることを確認。英書籍だとそうなると仮定しtitleで埋める
     book_df.loc[book_df["title_pron"]=="","title_pron"]=book_df.loc[book_df["title_pron"]=="","title"]
