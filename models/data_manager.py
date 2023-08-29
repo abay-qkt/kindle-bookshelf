@@ -47,8 +47,11 @@ def metadata_list2df(metadata_list):
     book_df["authors"] = book_df["authors"].map(lambda x_list:"/".join([x["#text"] for x in x_list]))
     book_df["publishers"] = book_df["publishers"].str.join('/')
 
-    # 無料という文字列が入った書籍は削除
+    # 無料という文字列が入った書籍は削除。例：【期間限定無料】
     book_df = book_df[~book_df["title"].str.contains("無料")]
+
+    book_df = book_df[book_df["origin_type"]!="Sample"] # 書籍サンプルを除外
+    book_df[book_df["origin_type"]!="KindleDictionary"] # デフォルトで入っている辞書を除外
     
     # kindleに最初から入っている辞書でpronunciationが空になることを確認。英書籍だとそうなると仮定しtitleで埋める
     book_df.loc[book_df["title_pron"]=="","title_pron"]=book_df.loc[book_df["title_pron"]=="","title"]
@@ -57,9 +60,9 @@ def metadata_list2df(metadata_list):
     # datetime型に変換。publication_dateはUTCでpurchase_dateはJST。
     book_df["publication_date"] = pd.to_datetime(book_df["publication_date"]).dt.tz_localize(None)
     book_df["purchase_date"] = pd.to_datetime(book_df["purchase_date"]).dt.tz_convert('Asia/Tokyo').dt.tz_localize(None)
-    # int64型に変換する際に欠損は扱えないため
-    book_df["publication_date"] = book_df["publication_date"] .fillna(pd.to_datetime("2200-01-01")) 
-    book_df["purchase_date"] = book_df["purchase_date"] .fillna(pd.to_datetime("2200-01-01"))
+    # int64型に変換する際に欠損は扱えないため埋めるか消す
+    book_df["publication_date"] = book_df["publication_date"] .fillna(pd.to_datetime("2200-01-01")) # たまに欠損が存在する
+    book_df = book_df.dropna(subset=["purchase_date"]) # kindleにデフォルトで入っている辞典は購入日欠損。不要なので除外
 
     book_df[["series_pron","series_num"]] =  book_df["title_pron"].apply(get_series_and_num)
     book_df["series_num"] = book_df["series_num"].fillna(-1).astype(int)
