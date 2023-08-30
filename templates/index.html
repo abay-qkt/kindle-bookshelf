@@ -13,9 +13,12 @@
 			<span id="hidden_buttons">
 				{% if not series_shelf_id %}
 				<input type="checkbox" id="edit_mode_check" onchange="switch_show_rating()"><label for="edit_mode_check">:Rating Mode</label>
-				<button onclick="update_rating()">Apply Rating</button>
-				<input type="checkbox" id="show_all_mode" onchange="switch_show_all();" style="margin-left:20px" checked><label for="show_all_mode">:Show all</label>
-				<button onclick="switch_shelf();" id="switchshelf_btn" style="margin-left:10px">SWITCH</button>
+				<button id="apply_rating" onclick="update_rating()">Apply Rating</button>
+				<br>
+				<input type="checkbox" id="show_all_mode" onchange="switch_show_all();" checked><label for="show_all_mode">:Show all</label>
+				<button onclick="switch_shelf();" id="switchshelf_btn" style="margin-left:10px">GRID/SERIAL</button>
+				<button onclick="reverse_shelf();" id="shelf_rev_btn" style="margin-left:10px">REVERSE</button>
+				<label for="shelf_dd" style="margin-left:10px">Shelf Type:</label><select id="shelf_dd"></select>
 				<button id="openButton" style="margin-left:10px">Shelf Config</button>
 				<div class="overlay" id="overlay">
 					<div id="config_window" class="popup">
@@ -23,11 +26,10 @@
 						<button onclick="save_shelf_config();" id="save">Save</button>
 						<h3>Select Config</h3>
 						<ul id="config_ul"></ul>
+						<br>
 						<button id="closeButton">Close</button>
 					</div>
 				</div>
-				<label for="shelf_dd">shelf_type:</label><select id="shelf_dd"></select>
-				<button onclick="reverse_shelf();" id="shelf_rev_btn" style="margin-left:10px">REVERSE</button>
 				<br>
 				<label for="colnum_dd">Columns:</label><select id="colnum_dd"></select>
 				<label for="imgsize_slider">Image Size:</label><input type="range" id="imgsize_slider" min="80" max="400" step="1" value="160" style="width:400px">

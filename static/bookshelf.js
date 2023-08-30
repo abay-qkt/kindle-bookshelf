@@ -370,11 +370,13 @@ function switch_show_rating(){
                     ,"sort_dd","asc_dd","keyword_box","query_box"
                     ,"apply1","apply2"]
   if(document.getElementById("edit_mode_check").checked){
+    document.getElementById("apply_rating").disabled=false;
     for(rid of related_ids){
       document.getElementById(rid).disabled = true;
     }
     $('.param_box').css({"display": "block"});
   }else{// 編集表示を消す
+    document.getElementById("apply_rating").disabled=true;
     for(rid of related_ids){
       document.getElementById(rid).disabled = false;
     }
@@ -515,6 +517,11 @@ function make_load_config_window(){
   });
   closeButton.addEventListener('click', () => {
     overlay.style.display = 'none';
+  });
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) {
+      overlay.style.display = "none";
+    }
   });
 }
 
