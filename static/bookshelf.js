@@ -155,6 +155,11 @@ function make_browser_url(asin){
   return browser_url;
 }
 
+function make_kindle_url(asin){
+  var kindle_url = 'kindle://book/?action=open&asin='+asin;
+  return kindle_url;
+}
+
 function sort_dictlist_by_key(key, is_asc) {
   if(['series_pron','author_pron'].includes(key)){ // 文字列の場合
     return (a, b) => {
@@ -295,6 +300,17 @@ function draw_shelf(){
       }
     }
   }
+  const coverElements = document.querySelectorAll(".cover");
+  coverElements.forEach(function (a_cover) {
+    a_cover.addEventListener("click", function (event) {
+      if (event.ctrlKey && event.shiftKey) { // カバー画像をShift+Ctrl+クリックでkindle for pcを開く
+        event.preventDefault();
+        const asin = a_cover.getAttribute("asin");
+        const kindle_url = make_kindle_url(asin);
+        window.open(kindle_url);
+      }
+    });
+  });
 
   // 再描画により改変されたCSSが適用されなくなるため、設定しなおす
   edit_book_size(imgsize_slider.value)
