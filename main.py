@@ -137,7 +137,7 @@ def get_book_info():
 				book_df["authors_pron"] = book_df["series_id"].map(authors_pron_dict)
 
 				book_df["series_id"] = book_df["authors"]
-				book_df["series_title"] = book_df["authors"]
+				book_df["series_title"] = book_df["authors"].fillna("").map(lambda x:x if len(x)<35 else x[:35]+"...")
 			elif(reqjson["shelf_keys"]=='collection'):
 				clctn_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='collection')
 				clctn_df = clctn_df.drop(["last_updated_timestamp"],axis=1).sort_values(["publication_date","title"])
