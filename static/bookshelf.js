@@ -178,9 +178,11 @@ function sort_dictlist_by_key(key, is_asc) {
 function draw_shelf(){
   document.getElementById("bookshelf").innerHTML=""
 
-  var sort_key = document.getElementById('sort_dd').value
-  var is_asc = document.getElementById('asc_dd').value
-  series_list.sort(sort_dictlist_by_key(sort_key,is_asc))
+  if(series_shelf_id==""){
+    var sort_key = document.getElementById('sort_dd').value
+    var is_asc = document.getElementById('asc_dd').value
+    series_list.sort(sort_dictlist_by_key(sort_key,is_asc))
+  }
 
   for(var i in series_list){
     var series_id = series_list[i].series_id
