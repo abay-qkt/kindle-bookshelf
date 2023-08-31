@@ -13,3 +13,7 @@ trial_dir/
 
 *.xlsx
 *.xlsx#
+
+build/
+dist/
+*.spec
