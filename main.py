@@ -46,13 +46,14 @@ if(not shelf_configs_path.exists()):
 default_shelf = {
 	"colnum": "3",
 	"imgsize": "160",
-	"sort_keys": "rating",
+	"sort_keys": "latest_purchase",
 	"is_asc": "0",
 	"keywords": "",
 	"query": "",
 	"show_all_mode": True,
 	"is_grid": True,
-	"is_reversed":True
+	"is_reversed":False,
+	"shelf_keys": "series"
 }
 with open(shelf_configs_path/"default.json","w") as f:
 	simplejson.dump(default_shelf,f,indent=4)
