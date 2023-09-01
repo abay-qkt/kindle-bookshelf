@@ -16,4 +16,3 @@ trial_dir/
 
 build/
 dist/
-*.spec
