@@ -68,6 +68,11 @@ if(not (shelf_config_js_path).exists()):
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
 
+# デバッグモードを無効にし、リローダーとデバッガーも無効に設定
+app.debug = False
+app.use_reloader = False
+app.use_debugger = False
+
 @app.route('/')
 def main_view():
 	update_info()
@@ -225,7 +230,7 @@ def favicon():
 if __name__ == "__main__":
 	write_formatted_excel(metadata_path,output_path="..") # 3秒程度要する
 	if(local_ip=="127.0.0.1"):
-		app.run(port=settings["port"])	
+		app.run(port=settings["port"]) 
 	else:
 		app.run(host="0.0.0.0",port=settings["port"])
 		

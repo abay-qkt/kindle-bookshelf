@@ -302,7 +302,7 @@ function draw_shelf(){
       }
     }
   }
-  const coverElements = document.querySelectorAll(".cover");
+  const coverElements = document.querySelectorAll(".cover, .cover_w");
   coverElements.forEach(function (a_cover) {
     a_cover.addEventListener("click", function (event) {
       if (event.ctrlKey && event.shiftKey) { // カバー画像をShift+Ctrl+クリックでkindle for pcを開く
