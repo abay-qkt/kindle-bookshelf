@@ -4,18 +4,48 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<title>KINDLE MANGA SHELF</title>
 		<link href="../static/bookshelf.css" rel="stylesheet" type="text/css">
+		<link href="../static/loading.css" rel="stylesheet" type="text/css">
 		<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 		<script src="https://cdn.it-the-best.com/jquery/plugin/listmousedrag/2.6.2/listmousedragscroll.min.js"></script>
 	</head>
 	<body>
+		<div id="loading-modal" class="modal">
+			<div class="modal-content">
+				<div class="sk-cube-grid">
+					<div class="sk-cube sk-cube1"></div>
+					<div class="sk-cube sk-cube2"></div>
+					<div class="sk-cube sk-cube3"></div>
+					<div class="sk-cube sk-cube4"></div>
+					<div class="sk-cube sk-cube5"></div>
+					<div class="sk-cube sk-cube6"></div>
+					<div class="sk-cube sk-cube7"></div>
+					<div class="sk-cube sk-cube8"></div>
+					<div class="sk-cube sk-cube9"></div>
+				</div>
+			</div>
+		</div>
 		<div class="status_bar">
 			<div id="hide_button"></div>
 			<span id="hidden_buttons">
 				{% if not series_shelf_id %}
 				<input type="checkbox" id="edit_mode_check" onchange="switch_show_rating()"><label for="edit_mode_check">:Rating Mode</label>
-				<button onclick="update_rating()">Apply Rating</button>
-				<input type="checkbox" id="show_all_mode" onchange="switch_show_all();" style="margin-left:20px" checked><label for="show_all_mode">:Show all</label>
-				<button onclick="switch_shelf();" id="switchshelf_btn" style="margin-left:10px">SWITCH</button>
+				<button id="apply_rating" onclick="update_rating()">Apply Rating</button>
+				<br>
+				<input type="checkbox" id="show_all_mode" onchange="switch_show_all();" checked><label for="show_all_mode">:Show all</label>
+				<button onclick="switch_shelf();" id="switchshelf_btn" style="margin-left:10px">GRID/SERIAL</button>
+				<button onclick="reverse_shelf();" id="shelf_rev_btn" style="margin-left:10px">REVERSE</button>
+				<label for="shelf_dd" style="margin-left:10px">Shelf Type:</label><select id="shelf_dd"></select>
+				<button id="openButton" style="margin-left:10px">Shelf Config</button>
+				<div class="overlay" id="overlay">
+					<div id="config_window" class="popup">
+						<label for="config_box">Shelf name for saving:</label><input type="text" id="config_box" size="40" value="">
+						<button onclick="save_shelf_config();" id="save">Save</button>
+						<h3>Select Config</h3>
+						<ul id="config_ul"></ul>
+						<br>
+						<button id="closeButton">Close</button>
+					</div>
+				</div>
 				<br>
 				<label for="colnum_dd">Columns:</label><select id="colnum_dd"></select>
 				<label for="imgsize_slider">Image Size:</label><input type="range" id="imgsize_slider" min="80" max="400" step="1" value="160" style="width:400px">
@@ -38,7 +68,9 @@
 		<script type="text/javascript">
 			var local_url = {{local_url|tojson}};
 			var series_shelf_id = {{series_shelf_id|tojson}};
+			var series_shelf_type = {{series_shelf_type|tojson}};
 		</script>
+		<script src="../static/shelf_config_name.js"></script>
 		<script src="../static/bookshelf.js"></script>
 	</body>
 </html>

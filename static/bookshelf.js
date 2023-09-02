@@ -5,6 +5,7 @@ var series_list = []
 var imgsize_slider;
 
 var is_grid = true;
+var is_reversed = false;
 
 // オプションバーの設定
 draw_option_bar();
@@ -16,7 +17,7 @@ $(function() { //ヘッダーの高さ分だけコンテンツを下げる
 });
 
 if(series_shelf_id==""){
-  call_api("get_book_info");
+  load_shelf_config(shelf_config_name);
 }else{
   get_one_series();
 }
@@ -40,7 +41,7 @@ function edit_book_size(size){
     "margin-right": size*0.03125+"px"
   });
   $('.serial_item').css({
-    "width": size*0.6+"px",
+    "width": size*0.8+"px",
   });
 }
 
@@ -64,7 +65,7 @@ function draw_option_bar(){
   if(series_shelf_id==""){ // 全シリーズ表示する本棚の場合
     // カラム数ドロップダウン
     var select_colnum = document.getElementById("colnum_dd")
-    for(var i=1;i<10;i++){
+    for(var i=1;i<=50;i++){
       var option_colnum =  document.createElement("option");
       option_colnum.setAttribute("value",i);
       option_colnum.innerHTML = i
@@ -77,12 +78,23 @@ function draw_option_bar(){
       edit_style(selectedItem.value);
     }
 
+    // 本棚タイプのドロップダウン
+    var select_shelf = document.getElementById("shelf_dd");
+    var shelf_keys = ["series","author","collection"]
+    for(var key of shelf_keys){
+      var option_shelf =  document.createElement("option");
+      option_shelf.setAttribute("value",key);
+      option_shelf.innerHTML = key
+      select_shelf.appendChild(option_shelf);
+    }
+    select_shelf.options[0].selected = true
+    select_shelf.onchange = send_query;
+
     // ソートキーのドロップダウン
     var select_sort = document.getElementById("sort_dd");
     var sort_keys = ["rating","series_pron","author_pron","purchases",
                     "oldest_publication","latest_publication",
-                    "oldest_purchase","latest_purchase",
-                    "early_purchase","late_purchase"]
+                    "oldest_purchase","latest_purchase"]
     for(var key of sort_keys){
       var option_sort =  document.createElement("option");
       option_sort.setAttribute("value",key);
@@ -90,11 +102,11 @@ function draw_option_bar(){
       select_sort.appendChild(option_sort);
     }
     select_sort.options[0].selected = true
-    select_sort.onchange = send_query;
+    select_sort.onchange = sort_shelf;
 
     // 昇順降順のドロップダウン
     var select_asc = document.getElementById("asc_dd");
-    var asc_dict = {"DESC":"0","ASC":"1"};
+    var asc_dict = {"DESC":"0","ASC":"1"}; // false/trueを入れてもsetAttributeすると文字列になるので。0,1にした
     for(var key of Object.keys(asc_dict)){
       var option_asc = document.createElement("option")
       option_asc.innerHTML = key
@@ -102,7 +114,7 @@ function draw_option_bar(){
       select_asc.appendChild(option_asc)
     }
     select_asc.options[0].selected = true
-    select_asc.onchange = send_query;
+    select_asc.onchange = sort_shelf;
 
     // キーワードのテキストボックス
     var inputtext_keywords = document.getElementById("keyword_box")
@@ -119,6 +131,8 @@ function draw_option_bar(){
         send_query();
       }
     };
+
+    make_load_config_window();
 
   }else{  // 一つのシリーズのみを表示する本棚の場合
     is_grid = false
@@ -140,20 +154,61 @@ function make_browser_url(asin){
   return browser_url;
 }
 
+function make_kindle_url(asin){
+  var kindle_url = 'kindle://book/?action=open&asin='+asin;
+  return kindle_url;
+}
+
+function sort_dictlist_by_key(key, is_asc) {
+  if(['series_pron','author_pron'].includes(key)){ // 文字列の場合
+    return (a, b) => {
+      return is_asc=="1" ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
+    };
+  }else{  // 数値の場合
+    return (a,b)=>{
+      var sign = is_asc=="1" ? 1:-1;
+      if (a[key] > b[key]){return 1*sign;}
+      else if (a[key] < b[key]){return -1*sign;}
+      else{return 0;}
+    }
+  }
+}
+
 function draw_shelf(){
   document.getElementById("bookshelf").innerHTML=""
+  if(series_list.length==0){return;}
+
+  if(series_shelf_id==""){
+    var sort_key = document.getElementById('sort_dd').value
+    var is_asc = document.getElementById('asc_dd').value
+    series_list.sort(sort_dictlist_by_key(sort_key,is_asc))
+  }
+
   for(var i in series_list){
     var series_id = series_list[i].series_id
     var series_books = book_list.filter(function(bdl){
       return bdl["series_id"] == series_id
     });
+    var series_title=series_list[i].series_title
+    var shelf_type= series_list[i].shelf_type // (iの値によらず全て同じ)
+    if(is_reversed){
+      series_books.reverse();
+    }
 
-    var series_link_url = local_url+"/series_shelf?series_id="+series_id;
+    var series_link_url = local_url+"/series_shelf?series_id="+encodeURIComponent(series_id);
     if(is_grid){ // グリッド表示の場合
       // シリーズ一つ分の棚
       var div_oneshelf = document.createElement('div');
       div_oneshelf.setAttribute("id","hsw_"+series_id);
       div_oneshelf.setAttribute("class","horizontal_scroll_wrap");
+      
+      // 表示するシリーズタイトル
+      if(shelf_type!='series'){ // authorやcollectionの時だけ表示させる
+        var div_series_title = document.createElement('div');
+        div_series_title.setAttribute("class","series_name");
+        div_series_title.innerHTML = series_title
+        div_oneshelf.appendChild(div_series_title)
+      }
 
       // シリーズページへのリンク
       var a_series_link = document.createElement('a');
@@ -163,6 +218,18 @@ function draw_shelf(){
       a_series_link.setAttribute("target","_blank");
       a_series_link.setAttribute("rel","noopener");
       div_oneshelf.appendChild(a_series_link)
+
+      // URLパラメータとして本棚タイプの追加
+      // クロージャを使用して a_series_link 要素を参照する
+      // a_series_linkの参照先はforループで上書きされていくので、
+      // クロージャ使わないとイベント発火時最後のa_series_linkが呼ばれることになる
+      a_series_link.addEventListener("click", function(a_series_link) {
+        return function(event) {
+            event.preventDefault();
+            var newURL = a_series_link.getAttribute("href") + "&shelf_type=" + encodeURIComponent(document.getElementById("shelf_dd").value);
+            window.open(newURL, "_blank");
+        };
+      }(a_series_link));
 
       // 評価情報ボックス
       var div_param_box = document.createElement('div');
@@ -235,6 +302,17 @@ function draw_shelf(){
       }
     }
   }
+  const coverElements = document.querySelectorAll(".cover");
+  coverElements.forEach(function (a_cover) {
+    a_cover.addEventListener("click", function (event) {
+      if (event.ctrlKey && event.shiftKey) { // カバー画像をShift+Ctrl+クリックでkindle for pcを開く
+        event.preventDefault();
+        const asin = a_cover.getAttribute("asin");
+        const kindle_url = make_kindle_url(asin);
+        window.open(kindle_url);
+      }
+    });
+  });
 
   // 再描画により改変されたCSSが適用されなくなるため、設定しなおす
   edit_book_size(imgsize_slider.value)
@@ -260,8 +338,22 @@ function switch_shelf(){
   draw_rating()
 }
 
+// 棚内の順序逆転
+function reverse_shelf(){
+  is_reversed = !is_reversed
+  draw_shelf()
+  draw_rating()
+}
+
+// 本棚の並び替え
+function sort_shelf(){
+  draw_shelf()
+  draw_rating()
+}
+
 // 評価情報ボックスの描画
 function draw_rating(){
+  if(document.getElementById("show_all_mode")==null){return}// one series shelfの場合スキップ
   var tabindex=100;
   for(var series_i of series_list){
       var table_param = document.createElement("table")
@@ -297,11 +389,13 @@ function switch_show_rating(){
                     ,"sort_dd","asc_dd","keyword_box","query_box"
                     ,"apply1","apply2"]
   if(document.getElementById("edit_mode_check").checked){
+    document.getElementById("apply_rating").disabled=false;
     for(rid of related_ids){
       document.getElementById(rid).disabled = true;
     }
     $('.param_box').css({"display": "block"});
   }else{// 編集表示を消す
+    document.getElementById("apply_rating").disabled=true;
     for(rid of related_ids){
       document.getElementById(rid).disabled = false;
     }
@@ -310,6 +404,7 @@ function switch_show_rating(){
 }
 
 function switch_show_all(){
+  if(document.getElementById("show_all_mode")==null){return}// one series shelfの場合スキップ
   if(document.getElementById("show_all_mode").checked){
     for(var item of document.getElementsByClassName("first")){
       var a_cover = item.childNodes[0];
@@ -337,39 +432,165 @@ function switch_show_all(){
 function update_rating(){
   for(i in series_list){
       elm = series_list[i]
-      if(document.getElementById(elm.series_id+"_rating")==null){continue}
+      // if(document.getElementById(elm.series_id+"_rating")==null){continue}
       elm.rating = Number(document.getElementById(elm.series_id+"_rating").value) // Number()は数字以外が入っているとnullになる
       elm.tags = document.getElementById(elm.series_id+"_tags").value
-      elm.tags = elm.tags=="null" ? null:elm.tags // tagsは文字列にしているため、nullを文字列としてとってしまうので変換。
+      elm.tags = elm.tags=="undefined" ? null:elm.tags // tagsは文字列にしているため、nullを文字列としてとってしまうので変換。
   }
   edit_series_review({"series_param":series_list});
 }
 
 // オプションバーから設定値を取得しクエリを投げる
 function send_query(){
-  var sort_key = document.getElementById("sort_dd").value
-  var is_asc  = document.getElementById("asc_dd").value
-  var keywords = document.getElementById("keyword_box").value
-  var query = document.getElementById("query_box").value
   data_dict = {
-    "sort_keys":sort_key,
-    "is_asc":is_asc,
-    "keywords":keywords,
-    "query":query
+    "shelf_keys":document.getElementById("shelf_dd").value,
+    "keywords":document.getElementById("keyword_box").value,
+    "query":document.getElementById("query_box").value
   }
+  // console.log(data_dict["shelf_keys"])
+
+  var edit_check = document.getElementById("edit_mode_check")
+  if(data_dict["shelf_keys"]!='series'){
+    edit_check.checked=false
+    edit_check.disabled=true
+  }else{
+    edit_check.disabled=false
+  }
+  switch_show_rating()
+
   call_api("get_book_info",arg_data={"data":data_dict})
+}
+
+function log_ajax_fail(jqXHR, textStatus, errorThrown){
+  console.log(textStatus,jqXHR,errorThrown);
+  console.log(jqXHR);
+  console.log(errorThrown);
+  alert(textStatus);
+}
+
+// ロードアイコンを表示する関数
+function showLoadingIcon() {
+  $("#loading-modal").show();
+}
+// ロードアイコンを非表示にする関数
+function hideLoadingIcon() {
+  $("#loading-modal").hide();
+}
+
+// オプションバーから設定値を取得しクエリを投げて保存する
+function save_shelf_config(){
+  showLoadingIcon();
+  data_dict = {
+    "shelf_keys":document.getElementById("shelf_dd").value,
+    "colnum":document.getElementById("colnum_dd").value,
+    "imgsize":document.getElementById("imgsize_slider").value,
+    "sort_keys":document.getElementById("sort_dd").value,
+    "is_asc":document.getElementById("asc_dd").value,
+    "keywords":document.getElementById("keyword_box").value,
+    "query":document.getElementById("query_box").value,
+    "show_all_mode":document.getElementById("show_all_mode").checked,
+    "is_grid":is_grid,
+    "is_reversed":is_reversed
+  }
+  $.ajax({
+    type: 'POST',
+    url : local_url+'/save_shelf_config',
+    data: JSON.stringify({"data":data_dict,"name":document.getElementById("config_box").value}),
+    contentType:'application/json'
+  }).done(function(res,textStatus,jqXHR){
+    console.log("saved");
+  }).fail(log_ajax_fail).always(hideLoadingIcon);
+  // 閉じる
+  const overlay = document.getElementById('overlay');
+  overlay.style.display = 'none';
+}
+
+function load_shelf_config(shelf_config_name){
+  $.ajax({
+    type: 'POST',
+    url : local_url+"/load_shelf_config",
+    data: JSON.stringify({"name":shelf_config_name}),
+    contentType:'application/json'
+  }).done(function(res,textStatus,jqXHR){
+    document.getElementById("shelf_dd").value=res["shelf_keys"]
+    document.getElementById("sort_dd").value=res["sort_keys"]
+    document.getElementById("asc_dd").value=res["is_asc"]
+    document.getElementById("keyword_box").value=res["keywords"]
+    document.getElementById("query_box").value=res["query"]
+    document.getElementById("show_all_mode").checked=res["show_all_mode"]
+    is_grid=res["is_grid"]
+    is_reversed=res["is_reversed"]
+    send_query();
+
+    document.getElementById("colnum_dd").value=res["colnum"]
+    document.getElementById("imgsize_slider").value=res["imgsize"]
+    edit_style(res["colnum"]);
+    edit_book_size(res["imgsize"]);
+    // draw_rating();
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    console.log(textStatus,jqXHR,errorThrown);
+    console.log(jqXHR);
+    console.log(errorThrown);
+    alert(textStatus);
+  });
+}
+
+// 本棚設定保存・ロード画面
+function make_load_config_window(){
+  const openButton = document.getElementById('openButton');
+  const overlay = document.getElementById('overlay');
+  const closeButton = document.getElementById('closeButton');
+
+  openButton.addEventListener('click', () => {
+    overlay.style.display = 'flex';
+    get_shelf_config_list();
+  });
+  closeButton.addEventListener('click', () => {
+    overlay.style.display = 'none';
+  });
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) {
+      overlay.style.display = "none";
+    }
+  });
+}
+
+// フォルダから本棚設定jsonのリストを取得
+function get_shelf_config_list(){
+  $.ajax({
+    type: 'POST',
+    url : local_url+"/get_shelf_config_list",
+    data: JSON.stringify({}),
+    contentType:'application/json'
+  }).done(function(res,textStatus,jqXHR){
+    console.log("done")
+    var shelf_config_list = res["shelf_config_list"]
+    var ul_config = document.getElementById('config_ul');
+    ul_config.innerHTML="";
+    if(shelf_config_list.length>0){
+      for(var sc of shelf_config_list){
+        var li_config =  document.createElement("li");
+        var btn_config = document.createElement("button")
+        btn_config.setAttribute("onclick",`load_shelf_config('${sc}');`)
+        btn_config.innerHTML=sc
+        li_config.appendChild(btn_config)
+        ul_config.appendChild(li_config)
+      }
+    }
+  }).fail(log_ajax_fail);
 }
 
 function get_one_series(){
   data_dict = {
-    "query":"series_id=='"+series_shelf_id+"'"
+    "query":"series_id=='"+series_shelf_id+"'",
+    "shelf_keys":series_shelf_type
   }
   call_api("get_book_info",arg_data={"data":data_dict})
 }
 
 // データをロードし、結果を描画する
 function call_api(api,arg_data={"data":null}){
-  console.log(arg_data)
+  showLoadingIcon();
   $.ajax({
       type: 'POST',
       url : local_url+"/"+api,
@@ -380,16 +601,12 @@ function call_api(api,arg_data={"data":null}){
       series_list = res["series"];
       draw_shelf();
       draw_rating();
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-      console.log(textStatus,jqXHR,errorThrown);
-      console.log(jqXHR);
-      console.log(errorThrown);
-      alert(textStatus);
-      });
+  }).fail(log_ajax_fail).always(hideLoadingIcon);
 }
 
 // 評価情報を編集し、再描画する
 function edit_series_review(series_dl_js){
+  showLoadingIcon();
   $.ajax({
       type: 'POST',
       url : local_url+'/edit_series_review',
@@ -397,10 +614,5 @@ function edit_series_review(series_dl_js){
       contentType:'application/json'
     }).done(function(res,textStatus,jqXHR){
       send_query();
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-      console.log(textStatus);
-      console.log(jqXHR);
-      console.log(errorThrown);
-      alert(textStatus);
-      });
+  }).fail(log_ajax_fail).always(hideLoadingIcon);
 }

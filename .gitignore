@@ -4,8 +4,15 @@ __pycache__/
 
 shelf_info/
 static/covers/
+static/shelf_config_name.js
 
 batch_files/
 
 *.ipynb
 trial_dir/
+
+*.xlsx
+*.xlsx#
+
+build/
+dist/

@@ -79,6 +79,16 @@ a.cover_w img{
   width: 50px;
   height: 100%;
 }
+/* シリーズ本棚の名前 */
+.series_name{
+  position: absolute;  /* horizontal_scroll_wrapと重ねて表示させる */
+  bottom: 0px;
+  left: 0px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: bold;
+}
 
 .status_bar {
   position: fixed;
@@ -107,3 +117,23 @@ ul {
   margin-inline-end: 0px;
   padding-inline-start: 0px;  /* ここが変更される */
 }
+
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.popup {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
