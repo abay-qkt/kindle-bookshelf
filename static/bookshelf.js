@@ -176,6 +176,7 @@ function sort_dictlist_by_key(key, is_asc) {
 
 function draw_shelf(){
   document.getElementById("bookshelf").innerHTML=""
+  if(series_list.length==0){return;}
 
   if(series_shelf_id==""){
     var sort_key = document.getElementById('sort_dd').value
