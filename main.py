@@ -177,9 +177,9 @@ def get_book_info():
 						.reset_index())
 		
 		if("keywords" in reqjson.keys() and reqjson["keywords"]!=""):
-			series_df = series_df[series_df["keywords"].str.contains("|".join(reqjson["keywords"].upper().replace("　"," ").split(" ")))]
+			series_df = series_df[series_df["keywords"].str.contains("|".join(reqjson["keywords"].upper().replace("　"," ").split(" ")))].copy()
 		if("query" in reqjson.keys() and reqjson["query"]!=""):
-			series_df = series_df.query(reqjson["query"])
+			series_df = series_df.query(reqjson["query"]).copy()
 
 		date_cols = ["oldest_publication","latest_publication",
 					 "oldest_purchase","latest_purchase"]
