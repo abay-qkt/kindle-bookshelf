@@ -17,7 +17,6 @@ $(function() { //ヘッダーの高さ分だけコンテンツを下げる
 });
 
 if(series_shelf_id==""){
-  // send_query();
   load_shelf_config(shelf_config_name);
 }else{
   get_one_series();
@@ -353,6 +352,7 @@ function sort_shelf(){
 
 // 評価情報ボックスの描画
 function draw_rating(){
+  if(document.getElementById("show_all_mode")==null){return}// one series shelfの場合スキップ
   var tabindex=100;
   for(var series_i of series_list){
       var table_param = document.createElement("table")
@@ -403,6 +403,7 @@ function switch_show_rating(){
 }
 
 function switch_show_all(){
+  if(document.getElementById("show_all_mode")==null){return}// one series shelfの場合スキップ
   if(document.getElementById("show_all_mode").checked){
     for(var item of document.getElementsByClassName("first")){
       var a_cover = item.childNodes[0];
@@ -445,7 +446,7 @@ function send_query(){
     "keywords":document.getElementById("keyword_box").value,
     "query":document.getElementById("query_box").value
   }
-  console.log(data_dict["shelf_keys"])
+  // console.log(data_dict["shelf_keys"])
 
   var edit_check = document.getElementById("edit_mode_check")
   if(data_dict["shelf_keys"]!='series'){
@@ -466,8 +467,18 @@ function log_ajax_fail(jqXHR, textStatus, errorThrown){
   alert(textStatus);
 }
 
+// ロードアイコンを表示する関数
+function showLoadingIcon() {
+  $("#loading-modal").show();
+}
+// ロードアイコンを非表示にする関数
+function hideLoadingIcon() {
+  $("#loading-modal").hide();
+}
+
 // オプションバーから設定値を取得しクエリを投げて保存する
 function save_shelf_config(){
+  showLoadingIcon();
   data_dict = {
     "shelf_keys":document.getElementById("shelf_dd").value,
     "colnum":document.getElementById("colnum_dd").value,
@@ -487,7 +498,7 @@ function save_shelf_config(){
     contentType:'application/json'
   }).done(function(res,textStatus,jqXHR){
     console.log("saved");
-  }).fail(log_ajax_fail);
+  }).fail(log_ajax_fail).always(hideLoadingIcon);
   // 閉じる
   const overlay = document.getElementById('overlay');
   overlay.style.display = 'none';
@@ -578,7 +589,7 @@ function get_one_series(){
 
 // データをロードし、結果を描画する
 function call_api(api,arg_data={"data":null}){
-  console.log(arg_data)
+  showLoadingIcon();
   $.ajax({
       type: 'POST',
       url : local_url+"/"+api,
@@ -589,11 +600,12 @@ function call_api(api,arg_data={"data":null}){
       series_list = res["series"];
       draw_shelf();
       draw_rating();
-  }).fail(log_ajax_fail);
+  }).fail(log_ajax_fail).always(hideLoadingIcon);
 }
 
 // 評価情報を編集し、再描画する
 function edit_series_review(series_dl_js){
+  showLoadingIcon();
   $.ajax({
       type: 'POST',
       url : local_url+'/edit_series_review',
@@ -601,5 +613,5 @@ function edit_series_review(series_dl_js){
       contentType:'application/json'
     }).done(function(res,textStatus,jqXHR){
       send_query();
-  }).fail(log_ajax_fail);
+  }).fail(log_ajax_fail).always(hideLoadingIcon);
 }
