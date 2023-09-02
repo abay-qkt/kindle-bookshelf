@@ -332,6 +332,11 @@ function draw_shelf(){
 // グリッド表示とシリアル表示の切り替え
 function switch_shelf(){
   is_grid = !is_grid
+  if(is_grid==true){
+    document.getElementById("edit_mode_check").disabled=false
+  }else{
+    document.getElementById("edit_mode_check").disabled=true
+  }
   document.getElementById("bookshelf").classList.toggle("grid_wrapper")
   document.getElementById("bookshelf").classList.toggle("serial_wrapper")
   draw_shelf()
@@ -353,6 +358,7 @@ function sort_shelf(){
 
 // 評価情報ボックスの描画
 function draw_rating(){
+  if(is_grid==false){return} // grid表示ではない場合スキップ
   if(document.getElementById("show_all_mode")==null){return}// one series shelfの場合スキップ
   var tabindex=100;
   for(var series_i of series_list){
