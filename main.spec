@@ -4,7 +4,8 @@
 block_cipher = None
 
 data_list = [
-    ('static/bookshelf.*','static'),
+    ('static/bookshelf.js','static'),
+    ('static/*.css','static'),
     ('static/favicon.ico','static'),
     ('templates/*.*','templates'),
 ]
