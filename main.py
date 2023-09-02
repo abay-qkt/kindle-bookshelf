@@ -13,6 +13,7 @@ from flask import Flask, Response, render_template, send_from_directory, request
 import simplejson
 import pandas as pd
 from models.data_manager import DataManager
+from models.excel_writer import write_formatted_excel
 from pathlib import Path
 
 shelf_info_path = Path("shelf_info/")
@@ -222,6 +223,7 @@ def favicon():
 
 
 if __name__ == "__main__":
+	write_formatted_excel(metadata_path,output_path="..") # 3秒程度要する
 	if(local_ip=="127.0.0.1"):
 		app.run(port=settings["port"])	
 	else:
