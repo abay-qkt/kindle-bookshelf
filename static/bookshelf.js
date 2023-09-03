@@ -178,6 +178,16 @@ function draw_shelf(){
   document.getElementById("bookshelf").innerHTML=""
   if(series_list.length==0){return;}
 
+  if(is_grid){
+    document.getElementById("edit_mode_check").disabled=false
+    document.getElementById("bookshelf").classList.remove("serial_wrapper");
+    document.getElementById("bookshelf").classList.add("grid_wrapper");
+  }else{
+    document.getElementById("edit_mode_check").disabled=true
+    document.getElementById("bookshelf").classList.remove("grid_wrapper");
+    document.getElementById("bookshelf").classList.add("serial_wrapper");
+  }
+
   if(series_shelf_id==""){
     var sort_key = document.getElementById('sort_dd').value
     var is_asc = document.getElementById('asc_dd').value
@@ -332,13 +342,6 @@ function draw_shelf(){
 // グリッド表示とシリアル表示の切り替え
 function switch_shelf(){
   is_grid = !is_grid
-  if(is_grid==true){
-    document.getElementById("edit_mode_check").disabled=false
-  }else{
-    document.getElementById("edit_mode_check").disabled=true
-  }
-  document.getElementById("bookshelf").classList.toggle("grid_wrapper")
-  document.getElementById("bookshelf").classList.toggle("serial_wrapper")
   draw_shelf()
   draw_rating()
 }
