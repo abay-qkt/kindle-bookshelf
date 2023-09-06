@@ -178,12 +178,15 @@ function draw_shelf(){
   document.getElementById("bookshelf").innerHTML=""
   if(series_list.length==0){return;}
 
+  var emode_check = document.getElementById("edit_mode_check");
   if(is_grid){
-    document.getElementById("edit_mode_check").disabled=false
+    emode_check.disabled=false
     document.getElementById("bookshelf").classList.remove("serial_wrapper");
     document.getElementById("bookshelf").classList.add("grid_wrapper");
   }else{
-    document.getElementById("edit_mode_check").disabled=true
+    if(emode_check!=null){ // 単一シリーズページだと表示させないので
+      document.getElementById("edit_mode_check").disabled=true
+    }
     document.getElementById("bookshelf").classList.remove("grid_wrapper");
     document.getElementById("bookshelf").classList.add("serial_wrapper");
   }
