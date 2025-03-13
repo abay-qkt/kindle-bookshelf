@@ -47,8 +47,9 @@ function edit_book_size(size){
 
 // GUIの表示
 function draw_option_bar(){
+  var hideButton = document.getElementById("hide_button");
   // GUIの表示非表示切り替え
-  document.getElementById("hide_button").onclick = function(){
+  hideButton.onclick = function(){
     cstate = !cstate
     
     $(function() { //ヘッダーの高さ分だけコンテンツを下げる
@@ -61,6 +62,15 @@ function draw_option_bar(){
       document.getElementById("hidden_buttons").style.display = "none"
     }
   }
+  // マウスオーバーとマウスアウトのイベントリスナーを追加
+  hideButton.addEventListener('mouseenter', function(event) {
+    event.target.style.backgroundColor = "rgba(135, 206, 250, 0.5)"; // 青色の半透明でハイライト
+    event.target.style.outline = "1px solid lightskyblue"; // 青色の枠線
+  });
+  hideButton.addEventListener('mouseleave', function(event) {
+    event.target.style.backgroundColor = ""; // 背景色をクリア
+    event.target.style.outline = ""; // 枠線をクリア
+  });
 
   if(series_shelf_id==""){ // 全シリーズ表示する本棚の場合
     // カラム数ドロップダウン
