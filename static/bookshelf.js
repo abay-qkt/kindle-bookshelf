@@ -604,15 +604,47 @@ function get_shelf_config_list(){
     ul_config.innerHTML="";
     if(shelf_config_list.length>0){
       for(var sc of shelf_config_list){
-        var li_config =  document.createElement("li");
-        var btn_config = document.createElement("button")
-        btn_config.setAttribute("onclick",`load_shelf_config('${sc}');`)
-        btn_config.innerHTML=sc
-        li_config.appendChild(btn_config)
-        ul_config.appendChild(li_config)
+        var li_config = document.createElement("li");
+        li_config.style.display = "flex"; // 横並びにするためにflexboxを使用
+        li_config.style.alignItems = "center"; // 垂直方向中央揃え
+
+        var span_config_name = document.createElement("span");
+        span_config_name.textContent = sc;
+        span_config_name.style.marginRight = "10px"; // 右に少しスペースを空ける
+        li_config.appendChild(span_config_name);
+
+        var btn_apply = document.createElement("button");
+        btn_apply.setAttribute("onclick", `load_shelf_config('${sc}');`);
+        btn_apply.textContent = "適用";
+        li_config.appendChild(btn_apply);
+
+        if (sc !== "default") {
+          var btn_delete = document.createElement("button");
+          btn_delete.textContent = "削除";
+          btn_delete.style.marginLeft = "5px"; // 左に少しスペースを空ける
+          btn_delete.setAttribute("onclick", `delete_shelf_config('${sc}');`);
+          li_config.appendChild(btn_delete);
+        }
+
+        ul_config.appendChild(li_config);
       }
     }
   }).fail(log_ajax_fail);
+}
+
+function delete_shelf_config(config_name) {
+  if (confirm(`設定「${config_name}」を本当に削除しますか？`)) {
+    showLoadingIcon();
+    $.ajax({
+      type: 'POST',
+      url: local_url + '/delete_shelf_config',
+      data: JSON.stringify({ "name": config_name }),
+      contentType: 'application/json'
+    }).done(function (res, textStatus, jqXHR) {
+      console.log("deleted");
+      get_shelf_config_list(); // リストを再読み込みして更新
+    }).fail(log_ajax_fail).always(hideLoadingIcon);
+  }
 }
 
 function get_one_series(){

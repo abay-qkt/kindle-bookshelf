@@ -111,6 +111,14 @@ def load_shelf_config():
 		f.write("var shelf_config_name='"+config_name+"'")
 	return Response(simplejson.dumps(shelf_config,ignore_nan=True),mimetype="application/json")
 
+@app.route('/delete_shelf_config',methods=["POST"])
+def delete_shelf_config():
+	config_name = request.json["name"]
+	shelf_config_file = shelf_configs_path/(config_name+".json")
+	if shelf_config_file.exists():
+		shelf_config_file.unlink()
+	return Response(simplejson.dumps(None),mimetype="application/json")
+
 @app.route('/get_shelf_config_list',methods=["POST"])
 def get_shelf_config_list():
 	path_list = sorted(shelf_configs_path.glob("*.json"))
