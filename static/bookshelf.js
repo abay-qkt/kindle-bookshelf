@@ -232,6 +232,19 @@ function draw_shelf(){
       a_series_link.setAttribute("rel","noopener");
       div_oneshelf.appendChild(a_series_link)
 
+      // マウスオーバー、マウスアウトイベントを追加
+      a_series_link.addEventListener('mouseenter', function(event) {
+        //マウスオーバーされたaタグの親要素をハイライト
+        event.target.parentNode.style.backgroundColor = "rgba(255, 255, 0, 0.5)";
+        event.target.parentNode.style.outline = "1px solid yellow";
+      });
+      a_series_link.addEventListener('mouseleave', function(event) {
+        //マウスアウトされたaタグの親要素のハイライト解除
+        event.target.parentNode.style.backgroundColor = "";
+        event.target.parentNode.style.outline = "";
+      }
+      );
+
       // URLパラメータとして本棚タイプの追加
       // クロージャを使用して a_series_link 要素を参照する
       // a_series_linkの参照先はforループで上書きされていくので、

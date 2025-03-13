@@ -79,6 +79,13 @@ a.cover_w img{
   width: 50px;
   height: 100%;
 }
+/* hidden_series_link のマウスオーバー時のスタイル */
+.hidden_series_link:hover {
+  background-color: rgba(255, 255, 0, 0.5); /* 黄色の半透明でハイライト */
+  outline: 1px solid yellow; /* 黄色の枠線 */
+  cursor: pointer;/*カーソルをポインタに変更*/
+}
+
 /* シリーズ本棚の名前 */
 .series_name{
   position: absolute;  /* horizontal_scroll_wrapと重ねて表示させる */
