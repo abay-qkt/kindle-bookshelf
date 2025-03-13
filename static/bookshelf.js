@@ -235,8 +235,8 @@ function draw_shelf(){
       // マウスオーバー、マウスアウトイベントを追加
       a_series_link.addEventListener('mouseenter', function(event) {
         //マウスオーバーされたaタグの親要素をハイライト
-        event.target.parentNode.style.backgroundColor = "rgba(255, 255, 0, 0.5)";
-        event.target.parentNode.style.outline = "1px solid yellow";
+        event.target.parentNode.style.backgroundColor = "rgba(135, 206, 250, 0.5)";
+        event.target.parentNode.style.outline = "1px solid lightskyblue";
       });
       a_series_link.addEventListener('mouseleave', function(event) {
         //マウスアウトされたaタグの親要素のハイライト解除
