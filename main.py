@@ -15,6 +15,15 @@ import pandas as pd
 from models.data_manager import DataManager
 from models.excel_writer import write_formatted_excel
 from pathlib import Path
+import argparse
+
+# コマンドライン引数の処理
+parser = argparse.ArgumentParser()
+parser.add_argument("--trial", action="store_true", help="Run in trial mode")
+args = parser.parse_args()
+
+trial_mode = args.trial  # True or False
+# 使用方法 python main.py --trial
 
 shelf_info_path = Path("shelf_info/")
 bookcovers_path = Path("static/")
@@ -76,7 +85,7 @@ app.use_debugger = False
 @app.route('/')
 def main_view():
 	update_info()
-	return render_template('index.html', local_url=local_url ,series_shelf_id="",series_shelf_type="")
+	return render_template('index.html', local_url=local_url ,series_shelf_id="",series_shelf_type="",trial_mode=trial_mode)
 
 @app.route('/series_shelf')
 def series_view():
