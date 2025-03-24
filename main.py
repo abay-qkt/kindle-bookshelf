@@ -15,6 +15,9 @@ import pandas as pd
 from models.data_manager import DataManager
 from models.excel_writer import write_formatted_excel
 from pathlib import Path
+import threading
+import webbrowser
+import tkinter as tk
 import argparse
 from trial_mode import TrialManager
 
@@ -245,10 +248,24 @@ def favicon():
 	return send_from_directory(app.root_path+"/static/","favicon.ico")
 
 
-if __name__ == "__main__":
+def run_flask():
 	write_formatted_excel(metadata_path,output_path="..") # 3秒程度要する
 	if(local_ip=="127.0.0.1"):
 		app.run(port=settings["port"]) 
 	else:
 		app.run(host="0.0.0.0",port=settings["port"])
+
+if __name__ == '__main__':
+    # Flaskは別スレッドで起動
+    threading.Thread(target=run_flask, daemon=True).start()
+
+    # # ブラウザ自動起動（オプション）
+    # webbrowser.open("http://127.0.0.1:5000")
+
+    # Tkinter GUIでウィンドウを表示
+    root = tk.Tk()
+    root.title("Kindle Book Shelf")
+    root.geometry("300x100")
+    tk.Label(root, text="アプリ起動中...").pack()
+    root.mainloop()
 		
