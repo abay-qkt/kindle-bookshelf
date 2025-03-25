@@ -36,22 +36,20 @@ if(not shelf_info_path.exists()):
 	shelf_info_path.mkdir()
 
 settings_path = shelf_info_path/"settings.json"
+default_settings = {
+	"metadata_path":str(Path.home()/"AppData/Local/Amazon/Kindle/Cache/"),
+	"local_ip":"127.0.0.1",
+	"port":5000
+}
 if(not settings_path.exists()):
 	with open(settings_path, "w") as f:
-		simplejson.dump({"metadata_path":None,"local_ip":None,"port":5000},f,indent=4)
+		simplejson.dump(default_settings,f,indent=4)
 
 with open(shelf_info_path/"settings.json", "r") as f:
 	settings = simplejson.load(f)
 
-if(settings["metadata_path"]):
-	metadata_path = Path(settings["metadata_path"])
-else:
-	metadata_path = Path.home()/"AppData/Local/Amazon/Kindle/Cache/"
-
-if(settings["local_ip"]):
-	local_ip = settings["local_ip"] 
-else:
-	local_ip = "127.0.0.1"
+metadata_path = Path(settings["metadata_path"])
+local_ip = "127.0.0.1" # settings["local_ip"] # 基本127.0.0.1以外ないので決め打ち。ただ、0.0.0.0使う可能性考えてjsonの情報はそのままにしておく
 local_url = 'http://{}:{}'.format(local_ip,settings["port"])
 
 shelf_configs_path = shelf_info_path/"shelf_configs"
@@ -250,17 +248,14 @@ def favicon():
 
 def run_flask():
 	write_formatted_excel(metadata_path,output_path="..") # 3秒程度要する
-	if(local_ip=="127.0.0.1"):
-		app.run(port=settings["port"]) 
-	else:
-		app.run(host="0.0.0.0",port=settings["port"])
+	app.run(host=local_ip,port=settings["port"])
 
 if __name__ == '__main__':
     # Flaskは別スレッドで起動
     threading.Thread(target=run_flask, daemon=True).start()
 
-    # # ブラウザ自動起動（オプション）
-    # webbrowser.open("http://127.0.0.1:5000")
+    # ブラウザ自動起動（オプション）
+    webbrowser.open(local_url)
 
     # Tkinter GUIでウィンドウを表示
     root = tk.Tk()
