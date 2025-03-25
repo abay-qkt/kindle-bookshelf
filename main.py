@@ -84,10 +84,28 @@ app.debug = False
 app.use_reloader = False
 app.use_debugger = False
 
+# Tkinter GUIの準備
+root = tk.Tk()
+root.title("Kindle Book Shelf")
+root.geometry("300x100")
+status_label = tk.Label(root, text="アプリ起動中...")
+status_label.pack()
+
+flask_ready = False
+
+def update_status(text):
+    """Tkinterのラベルを更新する関数"""
+    status_label.config(text=text)
+    root.update()  # GUIを更新
+
 @app.route('/')
 def main_view():
-	update_info()
-	return render_template('index.html', local_url=local_url ,series_shelf_id="",series_shelf_type="",trial_mode=trial_manager.enabled)
+    global flask_ready
+    update_status("データ更新中...")
+    update_info()
+    update_status("準備完了")
+    flask_ready = True
+    return render_template('index.html', local_url=local_url ,series_shelf_id="",series_shelf_type="",trial_mode=trial_manager.enabled)
 
 @app.route('/series_shelf')
 def series_view():
@@ -247,8 +265,12 @@ def favicon():
 
 
 def run_flask():
-	write_formatted_excel(metadata_path,output_path="..") # 3秒程度要する
-	app.run(host=local_ip,port=settings["port"])
+    global flask_ready
+    update_status("Excelファイル作成中...")
+    write_formatted_excel(metadata_path,output_path="..") # 3秒程度要する
+    update_status("Flask起動中...")
+    app.run(host=local_ip,port=settings["port"])
+    flask_ready = True
 
 if __name__ == '__main__':
     # Flaskは別スレッドで起動
@@ -257,10 +279,4 @@ if __name__ == '__main__':
     # ブラウザ自動起動（オプション）
     webbrowser.open(local_url)
 
-    # Tkinter GUIでウィンドウを表示
-    root = tk.Tk()
-    root.title("Kindle Book Shelf")
-    root.geometry("300x100")
-    tk.Label(root, text="アプリ起動中...").pack()
     root.mainloop()
-		
