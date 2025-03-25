@@ -29,7 +29,7 @@ class BookCoverManager():
             target_bookcovers = set(book_df["ASIN"]) - set(exists_bookcovers)
 
             if "src_path" in address.keys(): # Kindle for PC のキャッシュ画像をコピー
-                for asin in tqdm(target_bookcovers):
+                for asin in target_bookcovers:
                     asin_md5 = hashlib.md5(asin.encode()).hexdigest().upper() # ファイル名はASINのmd5ハッシュ
                     from_path = address["src_path"]/(asin_md5+".jpg")
                     to_path   = address["save_path"]/(asin+".jpg")
