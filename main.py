@@ -26,9 +26,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--trial", action="store_true", help="Run in trial mode")
 args = parser.parse_args()
 
-trial_manager = TrialManager(enabled=args.trial)  # True or False
-# 使用方法 python main.py --trial
-
 shelf_info_path = Path("shelf_info/")
 bookcovers_path = Path("static/")
 
@@ -94,6 +91,9 @@ status_label.pack()
 link_label = tk.Label(root, text=local_url, fg="blue", cursor="hand2")
 link_label.pack()
 link_label.bind("<Button-1>", lambda e: open_url(local_url))
+
+trial_manager = TrialManager(enabled=args.trial,root=root,limit_minutes=15) 
+# 使用方法 python main.py --trial
 
 def update_status(text):
     """Tkinterのラベルを更新する関数"""
@@ -175,7 +175,7 @@ def get_book_info():
 
 	reqjson = request.json["data"]
 	if(reqjson):
-		print(reqjson)
+		# print(reqjson)
 		if("shelf_keys" in reqjson.keys()):
 			if(reqjson["shelf_keys"])=='author':
 				# 漫画シリーズにおいて著者が複数いる場合、Amazon側の登録漏れで一部の巻だけ著者１名の場合が多々ある
