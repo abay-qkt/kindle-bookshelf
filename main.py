@@ -90,21 +90,26 @@ root.title("Kindle Book Shelf")
 root.geometry("300x100")
 status_label = tk.Label(root, text="アプリ起動中...")
 status_label.pack()
-
-flask_ready = False
+# ハイパーリンクを表示
+link_label = tk.Label(root, text=local_url, fg="blue", cursor="hand2")
+link_label.pack()
+link_label.bind("<Button-1>", lambda e: open_url(local_url))
 
 def update_status(text):
     """Tkinterのラベルを更新する関数"""
     status_label.config(text=text)
     root.update()  # GUIを更新
 
+def open_url(url):
+    """URLをブラウザで開く関数"""
+    webbrowser.open(url)
+
 @app.route('/')
 def main_view():
-    global flask_ready
     update_status("データ更新中...")
     update_info()
     update_status("準備完了")
-    flask_ready = True
+    
     return render_template('index.html', local_url=local_url ,series_shelf_id="",series_shelf_type="",trial_mode=trial_manager.enabled)
 
 @app.route('/series_shelf')
@@ -265,12 +270,10 @@ def favicon():
 
 
 def run_flask():
-    global flask_ready
     update_status("Excelファイル作成中...")
     write_formatted_excel(metadata_path,output_path="..") # 3秒程度要する
     update_status("Flask起動中...")
     app.run(host=local_ip,port=settings["port"])
-    flask_ready = True
 
 if __name__ == '__main__':
     # Flaskは別スレッドで起動
