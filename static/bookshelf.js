@@ -555,12 +555,10 @@ function load_shelf_config(shelf_config_name){
     document.getElementById("show_all_mode").checked=res["show_all_mode"]
     is_grid=res["is_grid"]
     is_reversed=res["is_reversed"]
-    send_query();
-
     document.getElementById("colnum_dd").value=res["colnum"]
     document.getElementById("imgsize_slider").value=res["imgsize"]
-    edit_style(res["colnum"]);
-    edit_book_size(res["imgsize"]);
+    send_query();
+
     // draw_rating();
   }).fail(function(jqXHR, textStatus, errorThrown) {
     console.log(textStatus,jqXHR,errorThrown);
@@ -668,6 +666,8 @@ function call_api(api,arg_data={"data":null}){
       series_list = res["series"];
       draw_shelf();
       draw_rating();
+      edit_style(document.getElementById("colnum_dd").value);
+      edit_book_size(document.getElementById("imgsize_slider").value);
   }).fail(log_ajax_fail).always(hideLoadingIcon);
 }
 
