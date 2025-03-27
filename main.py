@@ -124,6 +124,8 @@ def series_view():
 
 @app.route('/save_shelf_config',methods=["POST"])
 def save_shelf_config():
+	if trial_manager.enabled: # トライアルモードの場合は何もしない
+		return {}
 	reqjson = request.json["data"]
 	config_name = request.json["name"]+".json"
 	if config_name=='.json': # 何も入力されていなかった場合

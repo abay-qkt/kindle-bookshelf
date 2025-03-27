@@ -161,13 +161,13 @@ ul {
 }
 
 .sample-overlay::before {
-  content: "SAMPLE SAMPLE SAMPLE";
+  content: "TRIAL VERSION";
   position: absolute;
   white-space: pre;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(-30deg);
-  font-size: 3rem;
+  font-size: 10rem;
   color: rgba(200, 0, 0, 0.2);
   font-weight: bold;
 }

@@ -17,8 +17,8 @@ class TrialManager:
 
     def _watch(self):
         while True:
-            if time.time() - self._start_time > self.limit_minutes * 60:
-                if self.root:
-                    self.root.destroy()
-                sys.exit(0)
+            # if time.time() - self._start_time > self.limit_minutes * 60:
+            #     if self.root:
+            #         self.root.destroy()
+            #     sys.exit(0)
             time.sleep(1)
