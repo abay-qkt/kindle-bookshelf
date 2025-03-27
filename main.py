@@ -85,6 +85,7 @@ app.use_debugger = False
 root = tk.Tk()
 root.title("Kindle Book Shelf")
 root.geometry("300x100")
+root.iconbitmap(default="static/favicon.ico")
 status_label = tk.Label(root, text="アプリ起動中...")
 status_label.pack()
 # ハイパーリンクを表示
