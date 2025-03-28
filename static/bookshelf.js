@@ -666,8 +666,12 @@ function call_api(api,arg_data={"data":null}){
       series_list = res["series"];
       draw_shelf();
       draw_rating();
-      edit_style(document.getElementById("colnum_dd").value);
-      edit_book_size(document.getElementById("imgsize_slider").value);
+      
+      let col_elem = document.getElementById("colnum_dd");
+      if (col_elem) {  // シリーズ棚ではカラムがない
+        edit_style(document.getElementById("colnum_dd").value);
+        edit_book_size(document.getElementById("imgsize_slider").value);
+      }
   }).fail(log_ajax_fail).always(hideLoadingIcon);
 }
 
