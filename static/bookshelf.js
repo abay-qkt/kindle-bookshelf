@@ -194,11 +194,15 @@ function draw_shelf(){
     document.getElementById("bookshelf").classList.remove("serial_wrapper");
     document.getElementById("bookshelf").classList.add("grid_wrapper");
   }else{
-    if(emode_check!=null){ // 単一シリーズページだと表示させないので
+    if(emode_check!=null){ // 単一シリーズページだと表示させない
       document.getElementById("edit_mode_check").disabled=true
     }
     document.getElementById("bookshelf").classList.remove("grid_wrapper");
     document.getElementById("bookshelf").classList.add("serial_wrapper");
+  }
+  if(document.getElementById("shelf_dd").value!="series"){  // series以外の場合は編集モードを非表示にする
+    document.getElementById("edit_mode_check").checked=false
+    document.getElementById("edit_mode_check").disabled=true
   }
 
   if(series_shelf_id==""){
@@ -422,7 +426,7 @@ function draw_rating(){
 function switch_show_rating(){
   var related_ids = ["switchshelf_btn"
                     ,"sort_dd","asc_dd","keyword_box","query_box"
-                    ,"apply1","apply2"]
+                    ,"apply1","apply2","shelf_dd"]
   if(document.getElementById("edit_mode_check").checked){
     document.getElementById("apply_rating").disabled=false;
     for(rid of related_ids){
@@ -485,7 +489,7 @@ function send_query(){
   // console.log(data_dict["shelf_keys"])
 
   var edit_check = document.getElementById("edit_mode_check")
-  if(data_dict["shelf_keys"]!='series'){
+  if(data_dict["shelf_keys"]!='series'){ // ここでこれを設定してもcall_api->draw_shelfで上書きされるのでおそらく意味ない
     edit_check.checked=false
     edit_check.disabled=true
   }else{
