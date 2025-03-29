@@ -93,7 +93,9 @@ link_label = tk.Label(root, text=local_url, fg="blue", cursor="hand2")
 link_label.pack()
 link_label.bind("<Button-1>", lambda e: open_url(local_url))
 
-trial_manager = TrialManager(enabled=args.trial,root=root,limit_minutes=15) 
+is_trial_mode = args.trial
+# is_trial_mode = True # トライアルモードを強制的に有効にする場合(試用版をpyinstallerでビルド時)
+trial_manager = TrialManager(enabled=is_trial_mode,root=root,limit_minutes=15) 
 # 使用方法 python main.py --trial
 
 def update_status(text):
