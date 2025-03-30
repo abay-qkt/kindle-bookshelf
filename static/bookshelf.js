@@ -200,7 +200,7 @@ function draw_shelf(){
     document.getElementById("bookshelf").classList.remove("grid_wrapper");
     document.getElementById("bookshelf").classList.add("serial_wrapper");
   }
-  if(document.getElementById("shelf_dd").value!="series"){  // series以外の場合は編集モードを非表示にする
+  if(document.getElementById("shelf_dd")!=null && document.getElementById("shelf_dd").value!="series"){  // series以外の場合は編集モードを非表示にする
     document.getElementById("edit_mode_check").checked=false
     document.getElementById("edit_mode_check").disabled=true
   }
