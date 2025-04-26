@@ -34,7 +34,7 @@ if(not shelf_info_path.exists()):
 
 settings_path = shelf_info_path/"settings.json"
 default_settings = {
-	"metadata_path":str(Path.home()/"AppData/Local/Amazon/Kindle/Cache/"),
+	"metadata_path":str(Path.home()/"Library/Containers/com.amazon.Lassen/Data/Library"),
 	"local_ip":"127.0.0.1",
 	"port":5000
 }

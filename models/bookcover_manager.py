@@ -9,7 +9,7 @@ class BookCoverManager():
         self.bookcovers_path = Path(bookcovers_path)
         self.bookcover_addresses = [
             {
-                "src_path":Path(metadata_path)/"covers",
+                "src_path":Path(metadata_path)/"Caches/covers",
                 "save_path":Path(self.bookcovers_path/"covers")
             },
             # {

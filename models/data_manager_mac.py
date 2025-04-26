@@ -1,4 +1,4 @@
-# from .bookcover_manager import BookCoverManager
+from .bookcover_manager import BookCoverManager
 from pathlib import Path
 import pandas as pd
 import sqlite3
@@ -106,7 +106,7 @@ def get_date(x,key):
     return date
 
 def read_kindle_metadata(metadata_path):
-    conn = sqlite3.connect(metadata_path)
+    conn = sqlite3.connect(Path(metadata_path)/"Protected/BookData.sqlite")
     book_df = pd.read_sql_query('SELECT * FROM ZBOOK', conn)
     groupitem_df = pd.read_sql_query('SELECT * FROM ZGROUPITEM', conn)
     group_df = pd.read_sql_query('SELECT * FROM ZGROUP', conn)
@@ -209,8 +209,7 @@ class DataManager():
             self.init_book_db()
     
     def init_book_db(self):
-        book_df = read_kindle_metadata(self.metadata_path)
-        series_df = get_series_df(book_df)
+        book_df,series_df = read_kindle_metadata(self.metadata_path)
         series_df["rating"] = pd.NA
         series_df["tags"] = pd.NA
         clctn_df = read_kindle_collection(self.metadata_path,book_df)
@@ -223,8 +222,7 @@ class DataManager():
         self.bcover_manager.add_bookcovers(book_df)
 
     def update_from_kindle(self):
-        book_df = read_kindle_metadata(self.metadata_path)
-        series_df = get_series_df(book_df)
+        book_df,series_df = read_kindle_metadata(self.metadata_path)
         clctn_df = read_kindle_collection(self.metadata_path,book_df)
 
         prev_series_df = pd.read_excel(self.shelf_info_path/'shelf_info.xlsx',sheet_name='series')
