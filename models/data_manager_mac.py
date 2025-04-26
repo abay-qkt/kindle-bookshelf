@@ -108,8 +108,33 @@ def get_date(x,key):
 def read_kindle_metadata(metadata_path):
     conn = sqlite3.connect(metadata_path)
     book_df = pd.read_sql_query('SELECT * FROM ZBOOK', conn)
+    groupitem_df = pd.read_sql_query('SELECT * FROM ZGROUPITEM', conn)
+    group_df = pd.read_sql_query('SELECT * FROM ZGROUP', conn)
+
     book_df["ASIN"]=book_df["ZBOOKID"].map(lambda x:x.split(":")[1].split("-")[0])
     book_df["ZSYNCMETADATAATTRIBUTES"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(resolve_ns_keyed_archive_fully)
+
+    groupitem_df = pd.merge(
+        groupitem_df.drop(["Z_PK","Z_ENT","Z_OPT"],axis=1),
+        group_df.drop(["Z_ENT","Z_OPT"],axis=1),
+        how='left',
+        left_on='ZPARENTCONTAINER',
+        right_on='Z_PK'
+    ) 
+    book_df = pd.merge(
+        book_df.drop(["ZGROUPID"],axis=1), # こっちのZGROUPIDは空
+        groupitem_df[["ZBOOK","ZGROUPID","ZPOSITIONLABEL"]],
+        how='left',
+        left_on='Z_PK',
+        right_on='ZBOOK'
+    )
+    book_df["series_id"]=book_df["ZGROUPID"]
+    book_df["series_num"]=book_df["ZPOSITIONLABEL"]
+
+    series_df = pd.DataFrame(index=group_df.index)
+    series_df["series_id"]=group_df["ZGROUPID"]
+    series_df["series_pron"]=group_df["ZSORTTITLE"]
+    series_df["first_title"]=group_df["ZDISPLAYNAME"]    
 
     book_df["origin_type"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(get_origin_type)
 
@@ -140,39 +165,6 @@ def read_kindle_metadata(metadata_path):
     book_df["publication_date"] = book_df["publication_date"] .fillna(pd.to_datetime("2200-01-01")) # たまに欠損が存在する
     book_df = book_df.dropna(subset=["purchase_date"]) # kindleにデフォルトで入っている辞典は購入日欠損。不要なので除外
 
-    groupitem_df = pd.read_sql_query('SELECT * FROM ZGROUPITEM', conn)
-    group_df = pd.read_sql_query('SELECT * FROM ZGROUP', conn)
-
-    groupitem_df = pd.merge(
-        groupitem_df.drop(["Z_PK","Z_ENT","Z_OPT"],axis=1),
-        group_df.drop(["Z_ENT","Z_OPT"],axis=1),
-        how='left',
-        left_on='ZPARENTCONTAINER',
-        right_on='Z_PK'
-    )    
-    seriesitem_df = pd.DataFrame(index=groupitem_df.index)
-    seriesitem_df["series_id"]=groupitem_df["ZGROUPID"]
-    seriesitem_df["series_num"]=groupitem_df["ZPOSITIONLABEL"]
-    print(seriesitem_df["series_id"].dropna())
-    print(book_df["series_id"].dropna())
-    book_df = pd.merge(
-        book_df,
-        seriesitem_df,
-        how='left',
-        on="series_id"
-    )
-    
-    series_df = pd.DataFrame(index=group_df.index)
-    series_df["series_id"]=group_df["ZGROUPID"]
-    series_df["series_pron"]=group_df["ZSORTTITLE"]
-    series_df["first_title"]=group_df["ZDISPLAYNAME"]
-
-    book_df = pd.merge(
-        book_df,
-        series_df,
-        how='left',
-        on='series_id',
-    )
     book_df.loc[book_df["series_id"].isna(),"series_id"]=book_df.loc[book_df["series_id"].isna(),"ASIN"]
     book_df["series_count"] = book_df.groupby("series_id").transform("size")
     
