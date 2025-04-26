@@ -1,97 +1,185 @@
-from .bookcover_manager import BookCoverManager
+# from .bookcover_manager import BookCoverManager
 from pathlib import Path
 import pandas as pd
 import sqlite3
-import xmltodict
 import re
 
-def modify_metadata_dict(metadata_dict):
-    # 一つの書籍に対して著者が、欠損か、１つだけか、複数あるかによってauthors要素内の型が変わる。
-    # ・複数ある場合は、author辞書のリスト、
-    # ・1つだけの場合は、author辞書、
-    # ・欠損の場合は辞書でもリストでもない。
-    # publishersも同様。
-    # これを、1つの場合でも欠損の場合でもリストを持つように統一
-    for md in metadata_dict["response"]["add_update_list"]["meta_data"]:
-        if(not isinstance(md["authors"],dict)):  # 著者欠損の場合
-            md["authors"] = {"author":[]}
-        elif(not isinstance(md["authors"]["author"],list)):  # 著者が一人だけの場合
-            md["authors"]["author"] = [md["authors"]["author"]]
-        md["authors"] = md["authors"]["author"] # "authors":{"author":[{},{},{}]} →　"authors":[{},{},{}]
+import numpy as np
 
-        if(not isinstance(md["publishers"],dict)):
-            md["publishers"] = {"publisher":[]}
-        elif(not isinstance(md["publishers"]["publisher"],list)):
-            md["publishers"]["publisher"] = [md["publishers"]["publisher"]]
-        md["publishers"] = md["publishers"]["publisher"]
+import plistlib
+from typing import Any, Dict
 
-def get_series_and_num(x):
-    # 数字の前にスペースがある場合とない場合がある。連番2桁の場合と3桁の場合がある
-    pattern = '([ァ-ヴ][ァ-ヴー・]+\s*)(\d+)' 
-    rm = re.match(pattern,x)
-    if(rm):
-        return pd.Series([rm.group(1),int(rm.group(2))])
-    else:
-        return pd.Series([x,None])
+def resolve_ns_keyed_archive_fully(data: bytes) -> Any:
+    if pd.isna(data):
+        return np.nan
+    root = plistlib.loads(data)
+    objects = root["$objects"]
+    top_uid = root["$top"]["root"]
 
-def metadata_list2df(metadata_list):
-    book_df = pd.DataFrame.from_dict(metadata_list)
+    # クラスID → クラス名
+    class_map = {
+        idx: obj["$classname"]
+        for idx, obj in enumerate(objects)
+        if isinstance(obj, dict) and "$classname" in obj
+    }
 
-    book_df["origin_type"] = book_df["origins"].map(lambda x:x["origin"]['type'])
-    book_df.drop(["origins"],axis=1,inplace=True)
+    def resolve(obj: Any, memo: Dict[int, Any]) -> Any:
+        if isinstance(obj, plistlib.UID):
+            idx = obj.data
+            if idx in memo:
+                return memo[idx]
+            raw = objects[idx]
+            resolved = resolve(raw, memo)
+            memo[idx] = resolved
+            return resolved
 
-    book_df["title_pron"] = book_df["title"].map(lambda x:x["@pronunciation"])
-    book_df["title"] = book_df["title"].map(lambda x:x["#text"])
+        elif isinstance(obj, list):
+            return [resolve(item, memo) for item in obj]
 
-    book_df["authors_pron"] = book_df["authors"].map(lambda x_list:"/".join([x["@pronunciation"] for x in x_list]))
-    book_df["authors"] = book_df["authors"].map(lambda x_list:"/".join([x["#text"] for x in x_list]))
-    book_df["publishers"] = book_df["publishers"].str.join('/')
+        elif isinstance(obj, dict):
+            # クラスID に基づいて判定
+            class_id = obj.get("$class")
+            class_name = class_map.get(class_id.data) if isinstance(class_id, plistlib.UID) else None
+
+            # NSMutableArray / NSArray の展開
+            if class_name in ("NSMutableArray", "NSArray") and "NS.objects" in obj:
+                return resolve(obj["NS.objects"], memo)
+
+            # NSMutableDictionary / NSDictionary の展開
+            if class_name in ("NSMutableDictionary", "NSDictionary") and "NS.keys" in obj and "NS.objects" in obj:
+                keys = resolve(obj["NS.keys"], memo)
+                vals = resolve(obj["NS.objects"], memo)
+                return dict(zip(keys, vals))
+
+            # 通常の辞書展開
+            return {
+                resolve(k, memo): resolve(v, memo)
+                for k, v in obj.items()
+                if not (isinstance(k, str) and k.startswith("$"))
+            }
+
+        else:
+            return obj
+
+    return resolve(top_uid, {})
+    
+def get_author(x):
+    if not isinstance(x, dict):
+        return np.nan
+    attributes = x.get("attributes")
+    if not isinstance(attributes, dict):
+        return np.nan
+    authors = attributes.get("authors")
+    if not isinstance(authors, dict):
+        return np.nan
+    author = authors.get("author")
+    if author is None:
+        return np.nan
+    if isinstance(author, list):  # 複数人の場合リスト
+        return "/".join(author)
+    return author  # 一人の場合単なる文字列
+
+def get_origin_type(x):
+    if not isinstance(x, dict):
+        return np.nan
+    attributes = x.get("attributes")
+    if not isinstance(attributes, dict):
+        return np.nan
+    origins = attributes.get("origins")
+    if not isinstance(origins, dict):
+        return np.nan
+    origin = origins.get("origin")
+    if not isinstance(origin, dict):
+        return np.nan
+    type_value = origin.get("type")
+    if type_value is None:
+        return np.nan
+    return type_value
+
+def get_date(x,key):
+    if not isinstance(x, dict):
+        return np.nan
+    attributes = x.get("attributes")
+    if not isinstance(attributes, dict):
+        return np.nan
+    date = attributes.get(key)
+    return date
+
+def read_kindle_metadata(metadata_path):
+    conn = sqlite3.connect(metadata_path)
+    book_df = pd.read_sql_query('SELECT * FROM ZBOOK', conn)
+    book_df["ASIN"]=book_df["ZBOOKID"].map(lambda x:x.split(":")[1].split("-")[0])
+    book_df["ZSYNCMETADATAATTRIBUTES"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(resolve_ns_keyed_archive_fully)
+
+    book_df["origin_type"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(get_origin_type)
+
+    book_df["title_pron"] = book_df["ZSORTTITLE"]
+    book_df["title"] = book_df["ZDISPLAYTITLE"]
+
+    # book_df["authors_pron"] = ???
+    book_df["authors"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(get_author)
+    book_df["publishers"] = book_df["ZRAWPUBLISHER"]
+    
 
     # 無料という文字列が入った書籍は削除。例：【期間限定無料】
-    book_df = book_df[~book_df["title"].str.contains("無料")]
+    book_df = book_df[~book_df["title"].fillna("").str.contains("無料")]
 
     book_df = book_df[book_df["origin_type"]!="Sample"] # 書籍サンプルを除外
     book_df = book_df[book_df["origin_type"]!="KindleDictionary"] # デフォルトで入っている辞書を除外
     
     # kindleに最初から入っている辞書でpronunciationが空になることを確認。英書籍だとそうなると仮定しtitleで埋める
     book_df.loc[book_df["title_pron"]=="","title_pron"]=book_df.loc[book_df["title_pron"]=="","title"]
-    book_df.loc[book_df["authors_pron"]=="","authors_pron"]=book_df.loc[book_df["authors_pron"]=="","authors"]
+    # book_df.loc[book_df["authors_pron"]=="","authors_pron"]=book_df.loc[book_df["authors_pron"]=="","authors"]
 
-    # datetime型に変換。publication_dateはUTCでpurchase_dateはJST。
-    book_df["publication_date"] = pd.to_datetime(book_df["publication_date"]).dt.tz_localize(None)
-    book_df["purchase_date"] = pd.to_datetime(book_df["purchase_date"]).dt.tz_convert('Asia/Tokyo').dt.tz_localize(None)
+    # datetime型に変換
+    book_df["publication_date"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(lambda x:get_date(x,"publication_date"))
+    book_df["purchase_date"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(lambda x:get_date(x,"purchase_date"))
+    book_df["publication_date"] = pd.to_datetime(book_df["publication_date"])
+    book_df["purchase_date"] = pd.to_datetime(book_df["purchase_date"])
     # int64型に変換する際に欠損は扱えないため埋めるか消す
     book_df["publication_date"] = book_df["publication_date"] .fillna(pd.to_datetime("2200-01-01")) # たまに欠損が存在する
     book_df = book_df.dropna(subset=["purchase_date"]) # kindleにデフォルトで入っている辞典は購入日欠損。不要なので除外
 
-    book_df[["series_pron","series_num"]] =  book_df["title_pron"].apply(get_series_and_num)
-    book_df["series_num"] = book_df["series_num"].fillna(-1).astype(int)
+    groupitem_df = pd.read_sql_query('SELECT * FROM ZGROUPITEM', conn)
+    group_df = pd.read_sql_query('SELECT * FROM ZGROUP', conn)
+
+    groupitem_df = pd.merge(
+        groupitem_df.drop(["Z_PK","Z_ENT","Z_OPT"],axis=1),
+        group_df.drop(["Z_ENT","Z_OPT"],axis=1),
+        how='left',
+        left_on='ZPARENTCONTAINER',
+        right_on='Z_PK'
+    )    
+    seriesitem_df = pd.DataFrame(index=groupitem_df.index)
+    seriesitem_df["series_id"]=groupitem_df["ZGROUPID"]
+    seriesitem_df["series_num"]=groupitem_df["ZPOSITIONLABEL"]
+    print(seriesitem_df["series_id"].dropna())
+    print(book_df["series_id"].dropna())
+    book_df = pd.merge(
+        book_df,
+        seriesitem_df,
+        how='left',
+        on="series_id"
+    )
+    
+    series_df = pd.DataFrame(index=group_df.index)
+    series_df["series_id"]=group_df["ZGROUPID"]
+    series_df["series_pron"]=group_df["ZSORTTITLE"]
+    series_df["first_title"]=group_df["ZDISPLAYNAME"]
+
+    book_df = pd.merge(
+        book_df,
+        series_df,
+        how='left',
+        on='series_id',
+    )
+    book_df.loc[book_df["series_id"].isna(),"series_id"]=book_df.loc[book_df["series_id"].isna(),"ASIN"]
+    book_df["series_count"] = book_df.groupby("series_id").transform("size")
     
     # Kindle Unlimited購入と実購入で同じ本が入る場合があるため、重複を削除
     book_df.drop_duplicates(subset=["ASIN"],inplace=True) 
     
-    return book_df
-
-
-def read_kindle_metadata(metadata_path):
-    # kindle for PCのキャッシュファイルからメタデータ取得
-    with open(Path(metadata_path)/"KindleSyncMetadataCache.xml", encoding='utf-8') as f:
-        metadata_dict = xmltodict.parse(f.read())
-    modify_metadata_dict(metadata_dict)
-    
-    metadata_list = metadata_dict["response"]["add_update_list"]["meta_data"]
-    book_df = metadata_list2df(metadata_list)
-    book_df["series_id"] = book_df["series_pron"].copy()
-    return book_df
-
-def get_series_df(book_df):
-    series_df = (book_df
-                .sort_values(["title_pron","series_num"])
-                .groupby("series_id")
-                .agg({"title":"first","series_num":"count"})
-                .reset_index()
-                .rename(columns={"title":"first_title","series_num":"series_count"}))
-    return series_df
+    return book_df,series_df
 
 def read_kindle_collection(metadata_path,book_df):
     collection_path = metadata_path/"db/synced_collections.db"
