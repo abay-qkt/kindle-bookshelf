@@ -141,7 +141,7 @@ def read_kindle_metadata(metadata_path):
     book_df["title_pron"] = book_df["ZSORTTITLE"]
     book_df["title"] = book_df["ZDISPLAYTITLE"]
 
-    # book_df["authors_pron"] = ???
+    book_df["authors_pron"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(get_author) # 仮!!!!!
     book_df["authors"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(get_author)
     book_df["publishers"] = book_df["ZRAWPUBLISHER"]
     
@@ -159,10 +159,10 @@ def read_kindle_metadata(metadata_path):
     # datetime型に変換
     book_df["publication_date"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(lambda x:get_date(x,"publication_date"))
     book_df["purchase_date"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(lambda x:get_date(x,"purchase_date"))
-    book_df["publication_date"] = pd.to_datetime(book_df["publication_date"])
-    book_df["purchase_date"] = pd.to_datetime(book_df["purchase_date"])
+    book_df["publication_date"] = pd.to_datetime(book_df["publication_date"]).dt.tz_localize(None)
+    book_df["purchase_date"] = pd.to_datetime(book_df["purchase_date"]).dt.tz_convert('Asia/Tokyo').dt.tz_localize(None) # JSTにしてからタイムゾーン情報無くす
     # int64型に変換する際に欠損は扱えないため埋めるか消す
-    book_df["publication_date"] = book_df["publication_date"] .fillna(pd.to_datetime("2200-01-01")) # たまに欠損が存在する
+    # book_df["publication_date"] = book_df["publication_date"].fillna(pd.to_datetime("2099-01-01")) # たまに欠損が存在する
     book_df = book_df.dropna(subset=["purchase_date"]) # kindleにデフォルトで入っている辞典は購入日欠損。不要なので除外
 
     book_df.loc[book_df["series_id"].isna(),"series_id"]=book_df.loc[book_df["series_id"].isna(),"ASIN"]
@@ -174,26 +174,29 @@ def read_kindle_metadata(metadata_path):
     return book_df,series_df
 
 def read_kindle_collection(metadata_path,book_df):
-    collection_path = metadata_path/"db/synced_collections.db"
+    collection_path = metadata_path/"Protected/BookData.sqlite"
     conn = sqlite3.connect(collection_path)
-    collections_df = pd.read_sql_query('SELECT * FROM cloud_collections', conn)
-    collections_items_df = pd.read_sql_query('SELECT * FROM cloud_collections_items', conn)
+    collections_df = pd.read_sql_query('SELECT * FROM ZCOLLECTIONV2', conn)
+    collections_items_df = pd.read_sql_query('SELECT * FROM ZCOLLECTIONITEM', conn)
     # コレクションIDと名前の紐づけ
     clctn_df = (pd.merge(collections_items_df,
-                        collections_df[["id","name"]].rename(columns={"name":"collection_name"}),
-                        left_on='collection_id',
-                        right_on='id')
-                .drop(['id'],axis=1))
+                        collections_df[["ZCOLLECTIONID","ZNAME"]],
+                        on='ZCOLLECTIONID')
+                )
 
     # 書籍名とASINの紐づけ
     clctn_df = (pd.merge(clctn_df,
                         book_df,#[["ASIN","title"]],
-                        left_on='book_asin',
-                        right_on='ASIN')
-                .drop(['book_asin'],axis=1))
-    # datetime型に変換
-    clctn_df['last_updated_timestamp'] = (pd.to_datetime(clctn_df['last_updated_timestamp'])
-                                        .dt.tz_convert('Asia/Tokyo').dt.tz_localize(None))
+                        left_on='ZBOOK',
+                        right_on='Z_PK')
+                )
+    # # datetime型に変換
+    # clctn_df['last_updated_timestamp'] = (pd.to_datetime(clctn_df['last_updated_timestamp'])
+    #                                     .dt.tz_convert('Asia/Tokyo').dt.tz_localize(None))
+    clctn_df = clctn_df.rename(columns={
+        "ZCOLLECTIONID":"collection_id",
+        "ZNAME":"collection_name"
+        })
     return clctn_df
 
 class DataManager():

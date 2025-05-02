@@ -12,7 +12,7 @@ if os.name == 'nt':
 from flask import Flask, Response, render_template, send_from_directory, request
 import simplejson
 import pandas as pd
-from models.data_manager import DataManager
+from models.data_manager_mac import DataManager
 from models.excel_writer import write_formatted_excel
 from pathlib import Path
 import threading
@@ -85,7 +85,7 @@ app.use_debugger = False
 root = tk.Tk()
 root.title("Kindle Book Shelf")
 root.geometry("300x100")
-root.iconbitmap(default="static/favicon.ico")
+root.iconbitmap("static/favicon.ico")
 status_label = tk.Label(root, text="アプリ起動中...")
 status_label.pack()
 # ハイパーリンクを表示
@@ -194,7 +194,7 @@ def get_book_info():
 				book_df["series_title"] = book_df["authors"].fillna("").map(lambda x:x if len(x)<35 else x[:35]+"...")
 			elif(reqjson["shelf_keys"]=='collection'):
 				clctn_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='collection')
-				clctn_df = clctn_df.drop(["last_updated_timestamp"],axis=1).sort_values(["publication_date","title"])
+				clctn_df = clctn_df.sort_values(["publication_date","title"])
 				book_df = pd.merge(clctn_df,book_df[["ASIN","rating","tags"]],on='ASIN',how='left')
 				book_df["series_id"] = book_df["collection_id"]
 				book_df["series_title"] = book_df["collection_name"]

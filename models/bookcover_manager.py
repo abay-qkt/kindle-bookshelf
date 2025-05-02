@@ -8,14 +8,15 @@ class BookCoverManager():
     def __init__(self,metadata_path,bookcovers_path):
         self.bookcovers_path = Path(bookcovers_path)
         self.bookcover_addresses = [
-            {
-                "src_path":Path(metadata_path)/"Caches/covers",
-                "save_path":Path(self.bookcovers_path/"covers")
-            },
             # {
-            #     "src_url":'http://images-jp.amazon.com/images/P/{}.09.MAIN._SCLZZZZZZZ_.jpg',
-            #     "save_path":Path(self.bookcovers_path/"bookcovers_large")
-            # }
+            #     "src_path":Path(metadata_path)/"Caches/covers",
+            #     "save_path":Path(self.bookcovers_path/"covers")
+            # },
+            {
+                "src_url":'https://images-na.ssl-images-amazon.com/images/P/{}.09.LZZZZZZZ',
+                # "save_path":Path(self.bookcovers_path/"bookcovers_large")
+                "save_path":Path(self.bookcovers_path/"covers")
+            }
         ]
         for address in self.bookcover_addresses:
             if(not address["save_path"].exists()):
@@ -24,7 +25,7 @@ class BookCoverManager():
     def add_bookcovers(self, book_df):
         # 所有書籍のASINと表紙画像フォルダ内ののASINを比較
         # 表紙画像フォルダ内にない所有書籍のASINの表紙画像を取得
-        for address in self.bookcover_addresses:
+        for address in tqdm(self.bookcover_addresses):
             exists_bookcovers = [path.name.split(".")[0] for path in address["save_path"].glob("*")]    
             target_bookcovers = set(book_df["ASIN"]) - set(exists_bookcovers)
 
@@ -35,12 +36,12 @@ class BookCoverManager():
                     to_path   = address["save_path"]/(asin+".jpg")
                     if(from_path.exists()):
                         shutil.copy2(from_path,to_path)
-            # else:  # amazonのURLから画像を取得
-            #     for asin in tqdm(target_bookcovers):
-            #         time.sleep(1)
-            #         url = address["src_url"].format(asin)
-            #         file_name = address["save_path"]/Path(url).name
-            #         rq = requests.get(url, stream=True)
-            #         if rq.status_code == 200:
-            #             with open(file_name, 'wb') as f:
-            #                 f.write(rq.content)
+            else:  # amazonのURLから画像を取得
+                for asin in tqdm(target_bookcovers):
+                    time.sleep(0.1)
+                    url = address["src_url"].format(asin)
+                    file_name = address["save_path"]/(Path(url).name.split(".")[0]+".jpg")
+                    rq = requests.get(url, stream=True)
+                    if rq.status_code == 200:
+                        with open(file_name, 'wb') as f:
+                            f.write(rq.content)
