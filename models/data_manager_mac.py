@@ -123,17 +123,17 @@ def read_kindle_metadata(metadata_path):
     ) 
     book_df = pd.merge(
         book_df.drop(["ZGROUPID"],axis=1), # こっちのZGROUPIDは空
-        groupitem_df[["ZBOOK","ZGROUPID","ZPOSITIONLABEL"]],
+        groupitem_df[["ZBOOK","ZGROUPID","ZPOSITIONLABEL","ZSORTTITLE"]].rename(columns={"ZSORTTITLE":"ZGROUPSORTTITLE"}),
         how='left',
         left_on='Z_PK',
         right_on='ZBOOK'
     )
     book_df["series_id"]=book_df["ZGROUPID"]
     book_df["series_num"]=book_df["ZPOSITIONLABEL"]
+    book_df["series_pron"]=book_df["ZGROUPSORTTITLE"]
 
     series_df = pd.DataFrame(index=group_df.index)
     series_df["series_id"]=group_df["ZGROUPID"]
-    series_df["series_pron"]=group_df["ZSORTTITLE"]
     series_df["first_title"]=group_df["ZDISPLAYNAME"]    
 
     book_df["origin_type"] = book_df["ZSYNCMETADATAATTRIBUTES"].map(get_origin_type)
