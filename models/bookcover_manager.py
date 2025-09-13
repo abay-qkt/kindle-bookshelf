@@ -31,7 +31,7 @@ class BookCoverManager():
     def add_bookcovers(self, book_df):
         # 所有書籍のASINと表紙画像フォルダ内ののASINを比較
         # 表紙画像フォルダ内にない所有書籍のASINの表紙画像を取得
-        for address in tqdm(self.bookcover_addresses):
+        for address in self.bookcover_addresses:
             exists_bookcovers = [path.name.split(".")[0] for path in address["save_path"].glob("*")]    
             target_bookcovers = set(book_df["ASIN"]) - set(exists_bookcovers)
 
