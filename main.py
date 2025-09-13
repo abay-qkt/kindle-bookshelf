@@ -314,6 +314,6 @@ if __name__ == '__main__':
     threading.Thread(target=run_flask, daemon=True).start()
 
     # ブラウザ自動起動（オプション）
-    webbrowser.open(local_url)
+    # webbrowser.open(local_url)
 
     root.mainloop()
