@@ -1,6 +1,12 @@
 import pandas as pd
 from pathlib import Path
-from .data_manager import read_kindle_metadata, read_kindle_collection
+import platform
+
+# OS に応じて読み込み関数を切替
+if platform.system() == 'Windows':
+    from .data_manager import read_kindle_metadata, read_kindle_collection
+else:
+    from .data_manager_mac import read_kindle_metadata, read_kindle_collection
 
 # セル幅
 cell_width_dict =   {
@@ -109,7 +115,10 @@ def write_to_xlsx(df,sheet_name,writer,url_format):
     adjust_column_width(df,worksheet)
 
 def write_formatted_excel(metadata_path,output_path):
-    book_df = read_kindle_metadata(metadata_path)
+    if platform.system() == 'Windows':
+        book_df = read_kindle_metadata(metadata_path)
+    else:
+        book_df,_ = read_kindle_metadata(metadata_path)
     clctn_df = read_kindle_collection(metadata_path,book_df)
 
     kindle_url = r"kindle://book/?action=open&asin={}"

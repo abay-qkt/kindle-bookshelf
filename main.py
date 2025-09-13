@@ -12,7 +12,15 @@ if os.name == 'nt':
 from flask import Flask, Response, render_template, send_from_directory, request
 import simplejson
 import pandas as pd
-from models.data_manager import DataManager
+import platform
+# OS に応じて DataManager を切り替え
+if platform.system() == 'Windows':
+    from models.data_manager import DataManager
+elif platform.system() == 'Darwin':  # macOS
+    from models.data_manager_mac import DataManager
+else:
+    # 想定外の環境ではとりあえず mac 用を使用（必要に応じて調整）
+    from models.data_manager_mac import DataManager
 from models.excel_writer import write_formatted_excel
 from pathlib import Path
 import threading
@@ -33,8 +41,21 @@ if(not shelf_info_path.exists()):
 	shelf_info_path.mkdir()
 
 settings_path = shelf_info_path/"settings.json"
+
+def get_default_metadata_path():
+    system = platform.system()
+    if system == 'Windows':
+        # Kindle for PC のメタデータ（XML）とコレクションDB が配置される想定のディレクトリ
+        return str(Path.home()/"AppData/Local/Amazon/Kindle/Cache")
+    elif system == 'Darwin':
+        # Kindle for Mac (Lassen)
+        return str(Path.home()/"Library/Containers/com.amazon.Lassen/Data/Library")
+    else:
+        # その他OSはホームディレクトリを仮置き（必要に応じて調整）
+        return str(Path.home())
+
 default_settings = {
-	"metadata_path":str(Path.home()/"AppData/Local/Amazon/Kindle/Cache/"),
+	"metadata_path": get_default_metadata_path(),
 	"local_ip":"127.0.0.1",
 	"port":5000
 }
@@ -45,7 +66,15 @@ if(not settings_path.exists()):
 with open(shelf_info_path/"settings.json", "r") as f:
 	settings = simplejson.load(f)
 
-metadata_path = Path(settings["metadata_path"])
+# 設定ファイルのパスが存在しない場合は OS に応じた既定値へ自動切替（存在すれば保持）
+metadata_path = Path(settings.get("metadata_path", ""))
+if not metadata_path.exists():
+    auto_path = Path(get_default_metadata_path())
+    metadata_path = auto_path
+    settings["metadata_path"] = str(auto_path)
+    # 自動切替を永続化
+    with open(settings_path, "w") as f:
+        simplejson.dump(settings, f, indent=4)
 local_ip = "127.0.0.1" # settings["local_ip"] # 基本127.0.0.1以外ないので決め打ち。ただ、0.0.0.0使う可能性考えてjsonの情報はそのままにしておく
 local_url = 'http://{}:{}'.format(local_ip,settings["port"])
 
@@ -85,7 +114,7 @@ app.use_debugger = False
 root = tk.Tk()
 root.title("Kindle Book Shelf")
 root.geometry("300x100")
-root.iconbitmap(default="static/favicon.ico")
+root.iconbitmap("static/favicon.ico")
 status_label = tk.Label(root, text="アプリ起動中...")
 status_label.pack()
 # ハイパーリンクを表示
@@ -194,7 +223,7 @@ def get_book_info():
 				book_df["series_title"] = book_df["authors"].fillna("").map(lambda x:x if len(x)<35 else x[:35]+"...")
 			elif(reqjson["shelf_keys"]=='collection'):
 				clctn_df = pd.read_excel(shelf_info_path/'shelf_info.xlsx',sheet_name='collection')
-				clctn_df = clctn_df.drop(["last_updated_timestamp"],axis=1).sort_values(["publication_date","title"])
+				clctn_df = clctn_df.sort_values(["publication_date","title"])
 				book_df = pd.merge(clctn_df,book_df[["ASIN","rating","tags"]],on='ASIN',how='left')
 				book_df["series_id"] = book_df["collection_id"]
 				book_df["series_title"] = book_df["collection_name"]
@@ -285,6 +314,6 @@ if __name__ == '__main__':
     threading.Thread(target=run_flask, daemon=True).start()
 
     # ブラウザ自動起動（オプション）
-    webbrowser.open(local_url)
+    # webbrowser.open(local_url)
 
     root.mainloop()

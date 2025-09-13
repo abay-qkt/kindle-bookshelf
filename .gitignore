@@ -2,8 +2,10 @@ __pycache__/
 .ipynb_checkpoints/
 .vscode/
 
+
 shelf_info/
 static/covers/
+static/bookcovers_large/
 static/shelf_config_name.js
 
 batch_files/
@@ -13,6 +15,8 @@ trial_dir/
 
 *.xlsx
 *.xlsx#
+
+.DS_Store
 
 build/
 dist/
