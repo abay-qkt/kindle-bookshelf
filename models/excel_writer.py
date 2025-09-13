@@ -115,7 +115,10 @@ def write_to_xlsx(df,sheet_name,writer,url_format):
     adjust_column_width(df,worksheet)
 
 def write_formatted_excel(metadata_path,output_path):
-    book_df,_ = read_kindle_metadata(metadata_path)
+    if platform.system() == 'Windows':
+        book_df = read_kindle_metadata(metadata_path)
+    else:
+        book_df,_ = read_kindle_metadata(metadata_path)
     clctn_df = read_kindle_collection(metadata_path,book_df)
 
     kindle_url = r"kindle://book/?action=open&asin={}"
