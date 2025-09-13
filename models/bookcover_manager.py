@@ -4,20 +4,26 @@ import shutil
 import hashlib
 from pathlib import Path
 from tqdm import tqdm
+import platform
+
 class BookCoverManager():
     def __init__(self,metadata_path,bookcovers_path):
         self.bookcovers_path = Path(bookcovers_path)
-        self.bookcover_addresses = [
-            # {
-            #     "src_path":Path(metadata_path)/"Caches/covers",
-            #     "save_path":Path(self.bookcovers_path/"covers")
-            # },
-            {
-                "src_url":'https://images-na.ssl-images-amazon.com/images/P/{}.09.LZZZZZZZ',
-                # "save_path":Path(self.bookcovers_path/"bookcovers_large")
-                "save_path":Path(self.bookcovers_path/"covers")
-            }
-        ]
+        system = platform.system()
+        if system == 'Windows':
+            self.bookcover_addresses = [
+                {
+                    "src_path":Path(metadata_path)/"Caches/covers",
+                    "save_path":Path(self.bookcovers_path/"covers")
+                }
+            ]
+        else:
+            self.bookcover_addresses = [
+                {
+                    "src_url":'https://images-na.ssl-images-amazon.com/images/P/{}.09.LZZZZZZZ',
+                    "save_path":Path(self.bookcovers_path/"covers")
+                }
+            ]
         for address in self.bookcover_addresses:
             if(not address["save_path"].exists()):
                 address["save_path"].mkdir()
