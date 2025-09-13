@@ -1,6 +1,12 @@
 import pandas as pd
 from pathlib import Path
-from .data_manager_mac import read_kindle_metadata, read_kindle_collection
+import platform
+
+# OS に応じて読み込み関数を切替
+if platform.system() == 'Windows':
+    from .data_manager import read_kindle_metadata, read_kindle_collection
+else:
+    from .data_manager_mac import read_kindle_metadata, read_kindle_collection
 
 # セル幅
 cell_width_dict =   {
