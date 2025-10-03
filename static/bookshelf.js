@@ -155,7 +155,8 @@ function draw_option_bar(){
 }
 
 function make_image_url(asin){
-  var image_url = '../static/covers/'+asin+'.jpg';
+  // var image_url = '../static/covers/'+asin+'.jpg'; // あとでosで条件分岐するようにする
+  var image_url = 'https://images-na.ssl-images-amazon.com/images/P/'+asin+'.09.LZZZZZZZ'
   return image_url
 }
 
@@ -165,7 +166,8 @@ function make_browser_url(asin){
 }
 
 function make_kindle_url(asin){
-  var kindle_url = 'kindle://book/?action=open&asin='+asin;
+  // var kindle_url = 'kindle://book/?action=open&asin='+asin;
+  var kindle_url = 'https://read.amazon.co.jp/?asin='+asin;
   return kindle_url;
 }
 
