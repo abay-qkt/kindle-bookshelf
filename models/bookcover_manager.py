@@ -43,10 +43,11 @@ class BookCoverManager():
                     if(from_path.exists()):
                         shutil.copy2(from_path,to_path)
             else:  # amazonのURLから画像を取得
-                for asin in tqdm(target_bookcovers):
-                    url = address["src_url"].format(asin)
-                    file_name = address["save_path"]/(Path(url).name.split(".")[0]+".jpg")
-                    rq = requests.get(url, stream=True)
-                    if rq.status_code == 200:
-                        with open(file_name, 'wb') as f:
-                            f.write(rq.content)
+                pass
+                # for asin in tqdm(target_bookcovers):
+                #     url = address["src_url"].format(asin)
+                #     file_name = address["save_path"]/(Path(url).name.split(".")[0]+".jpg")
+                #     rq = requests.get(url, stream=True)
+                #     if rq.status_code == 200:
+                #         with open(file_name, 'wb') as f:
+                #             f.write(rq.content)
