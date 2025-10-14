@@ -9,26 +9,20 @@ import platform
 class BookCoverManager():
     def __init__(self,metadata_path,bookcovers_path):
         self.bookcovers_path = Path(bookcovers_path)
-        system = platform.system()
-        if system == 'Windows':
-            self.bookcover_addresses = [
-                {
-                    "src_path":Path(metadata_path)/"Caches/covers",
-                    "save_path":Path(self.bookcovers_path/"covers")
-                }
-            ]
-        else:
-            self.bookcover_addresses = [
-                {
-                    "src_url":'https://images-na.ssl-images-amazon.com/images/P/{}.09.LZZZZZZZ',
-                    "save_path":Path(self.bookcovers_path/"covers")
-                }
-            ]
+        
+        self.bookcover_addresses = [
+            {
+                "src_path":Path(metadata_path)/"Caches/covers",
+                "save_path":Path(self.bookcovers_path/"covers")
+            }
+        ]
+
         for address in self.bookcover_addresses:
             if(not address["save_path"].exists()):
                 address["save_path"].mkdir()
 
     def add_bookcovers(self, book_df):
+        system = platform.system()
         # 所有書籍のASINと表紙画像フォルダ内ののASINを比較
         # 表紙画像フォルダ内にない所有書籍のASINの表紙画像を取得
         for address in self.bookcover_addresses:
@@ -37,9 +31,15 @@ class BookCoverManager():
 
             if "src_path" in address.keys(): # Kindle for PC のキャッシュ画像をコピー
                 for asin in target_bookcovers:
-                    asin_md5 = hashlib.md5(asin.encode()).hexdigest().upper() # ファイル名はASINのmd5ハッシュ
-                    from_path = address["src_path"]/(asin_md5+".jpg")
-                    to_path   = address["save_path"]/(asin+".jpg")
+                    if system == 'Windows':
+                        asin_md5 = hashlib.md5(asin.encode()).hexdigest().upper() # ファイル名はASINのmd5ハッシュ
+                        from_path = address["src_path"]/(asin_md5+".jpg")
+                        to_path   = address["save_path"]/(asin+".jpg")
+                    else: 
+                        url = f"https://m.media-amazon.com/images/P/{asin}.jpg"
+                        asin_md5 = hashlib.md5(url.encode("utf-8")).hexdigest().upper()
+                        from_path = address["src_path"]/(asin_md5+".png")
+                        to_path   = address["save_path"]/(asin+".jpg")
                     if(from_path.exists()):
                         shutil.copy2(from_path,to_path)
             else:  # amazonのURLから画像を取得
