@@ -155,8 +155,8 @@ function draw_option_bar(){
 }
 
 function make_image_url(asin){
-  // var image_url = '../static/covers/'+asin+'.jpg'; // あとでosで条件分岐するようにする
-  var image_url = 'https://images-na.ssl-images-amazon.com/images/P/'+asin+'.09.LZZZZZZZ'
+  var image_url = '../static/covers/'+asin+'.jpg';
+  // var image_url = 'https://images-na.ssl-images-amazon.com/images/P/'+asin+'.09.LZZZZZZZ' // 直接参照する場合
   return image_url
 }
 
