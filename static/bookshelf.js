@@ -347,7 +347,7 @@ function draw_shelf(){
   const coverElements = document.querySelectorAll(".cover, .cover_w");
   coverElements.forEach(function (a_cover) {
     a_cover.addEventListener("click", function (event) {
-      if (event.ctrlKey && event.shiftKey) { // カバー画像をShift+Ctrl+クリックでkindle for pcを開く
+      if (event.shiftKey && (event.ctrlKey || event.metaKey)) { // カバー画像をShift+Ctrl(Command)+クリックでkindle for pcを開く
         event.preventDefault();
         const asin = a_cover.getAttribute("asin");
         const kindle_url = make_kindle_url(asin);
